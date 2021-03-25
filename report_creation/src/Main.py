@@ -189,10 +189,10 @@ if __name__ == '__main__':
 
     # - - - - - - 
 
-    Drix_status_data = Dp.drix_status_data(L_bags)
+    # Drix_status_data = Dp.drix_status_data(L_bags)
 
-    data_status_smooth = Dp.filter_gasolineLevel(Drix_status_data)
-    Disp.plot_drix_status(data_status_smooth)
+    # data_status_smooth = Dp.filter_gasolineLevel(Drix_status_data)
+    # Disp.plot_drix_status(data_status_smooth)
 
     
     # L_emergency_mode = Dp.filter_binary_msg(Drix_status_data,'emergency_mode == True')
@@ -203,7 +203,9 @@ if __name__ == '__main__':
 
     # # - - - - - - - - - - - - - - - - 
 
-    # Phins_data, dic = Dp.drix_phins_data(L_bags)
+    Phins_data, dic,L_heading = Dp.drix_phins_data(L_bags,gps_data_diag) # Needs list_act and list_start_t of gps_data_diag
+    Disp.plot_phins_heading_curve(L_heading)
+    Disp.plot_global_phins_heading_curve(Phins_data)
 
 
     # # - - - - - - - - - - - - - - - - 

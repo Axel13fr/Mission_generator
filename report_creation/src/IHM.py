@@ -144,12 +144,14 @@ def genrerate_ihm(report_data):
 				a(msg)
 				a(" ")
 
-			with a.h2():
-				a("-------------- Drix_phins -------------")
 
 			with a.p():
 				msg = 'No data found'
 				if (report_data.data_phins != None):
+
+					with a.h2():
+						a("-------------- Drix_phins -------------")
+
 					with a.h3():
 						a("Roll curve : "+'<br>')
 
@@ -168,6 +170,11 @@ def genrerate_ihm(report_data):
 					msg3 = "mean pitch : "+str(report_data.data_phins["pitch_mean"])
 
 					a(msg1+msg2+msg3)
+
+					a(" ")
+
+					a("Heading curve "+"<a href = ../IHM/heading_subplots.html>subplots</a>")
+					a("Heading curve "+"<a href = ../IHM/heading_curve.html>Global plot</a>")
 
 				else:
 					a(msg)

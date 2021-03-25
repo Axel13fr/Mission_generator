@@ -156,7 +156,9 @@ def statistics_gps(gps_data):
     list_vit_act_n = [] # speeed in knot
     list_action2 = [list_action[1]] # in order to have the same length than list_v
     list_dist_act = []
-    list_start_t =[gps_data['Time_str'][0]]
+    list_start_t_str =[gps_data['Time_str'][0]]
+    list_start_t =[gps_data['Time'][0]]
+    list_dt_act = []
 
     previous_act = list_action[1] # due to list_v length, we neglect the first value
     previous_dist = 0
@@ -168,11 +170,13 @@ def statistics_gps(gps_data):
         if list_action[k] != previous_act:
 
             list_action2.append(list_action[k])
-            list_start_t.append(gps_data['Time_str'][k])
+            list_start_t_str.append(gps_data['Time_str'][k])
+            list_start_t.append(gps_data['Time'][k])
             
             d_act = int((list_dist[k-1]-previous_dist)*1000)/1000
-            dt = ((gps_data['Time'][k-1] - previous_t).total_seconds())
+            dt = ((gps_data['Time'][k-1] - previous_t).total_seconds()) 
 
+            list_dt_act.append(int((dt/60)*100)/100) # in minute
             list_dist_act.append(d_act) # in km
             list_vit_act.append(int(((d_act*1000)/dt)*100)/100) # in m/s
             list_vit_act_n.append(int(((d_act*1000)/dt)*1.9438*100)/100) # in knot
@@ -185,14 +189,15 @@ def statistics_gps(gps_data):
     d_act = int((list_dist[-1]-previous_dist)*1000)/1000
     dt = ((gps_data['Time'][len(lx)-1] - previous_t).total_seconds())
 
+    list_dt_act.append(int((dt/60)*100)/100) # in minute
     list_dist_act.append(d_act) # in km
     list_vit_act.append(int(((d_act*1000)/dt)*100)/100) # in m/s
     list_vit_act_n.append(int(((d_act*1000)/dt)*1.9438*100)/100) # in knot
 
     list_index = range(len(list_action2))
 
-    gps_data_diag =  pd.DataFrame({'list_index': list_index ,'list_start_t': list_start_t , 'list_dist_act': list_dist_act,
-        'list_act': list_action2 , 'list_vit_act': list_vit_act,'list_vit_act_n': list_vit_act_n})
+    gps_data_diag =  pd.DataFrame({'list_index': list_index ,'list_start_t': list_start_t ,'list_start_t_str': list_start_t_str , 'list_dist_act': list_dist_act,
+        'list_act': list_action2 , 'list_vit_act': list_vit_act,'list_vit_act_n': list_vit_act_n, 'list_dt_act': list_dt_act})
 
 
     return gps_data,gps_data_diag,L
@@ -206,14 +211,14 @@ def handle_drix_status_data(bag): #fct that processes drix_status data
 
     path = bag.csv_path_drix_status
     data = pd.read_csv(path)
-
-    result = pd.DataFrame({'Time': data['Time'],
-        'gasolineLevel_percent': data['gasolineLevel_percent'],
-        'drix_mode': data['drix_mode'],
-        'emergency_mode': data['emergency_mode'],
-        'remoteControlLost' : data['remoteControlLost'],
-        'shutdown_requested' : data['shutdown_requested'],
-        'reboot_requested' : data['reboot_requested']
+    n = 1 # under sampling rate
+    result = pd.DataFrame({'Time': data['Time'][::n],
+        'gasolineLevel_percent': data['gasolineLevel_percent'][::n],
+        'drix_mode': data['drix_mode'][::n],
+        'emergency_mode': data['emergency_mode'][::n],
+        'remoteControlLost' : data['remoteControlLost'][::n],
+        'shutdown_requested' : data['shutdown_requested'][::n],
+        'reboot_requested' : data['reboot_requested'][::n]
         })
 
     return (result)
@@ -280,19 +285,22 @@ def handle_phins_data(bag): #fct that processes drix_status data
     path = bag.csv_path_d_phins
     data = pd.read_csv(path)
 
-    result = pd.DataFrame({'Time': data['Time'],
-        'headingDeg': data['headingDeg'],
-        'rollDeg': data['rollDeg'],
-        'pitchDeg': data['pitchDeg'],
-        'latitudeDeg' : data['latitudeDeg'],
-        'longitudeDeg' : data['longitudeDeg']
+    n = 3 # under sampling rate
+
+    result = pd.DataFrame({'Time': data['Time'][::n],
+        'headingDeg': data['headingDeg'][::n],
+        'rollDeg': data['rollDeg'][::n],
+        'pitchDeg': data['pitchDeg'][::n],
+        'latitudeDeg' : data['latitudeDeg'][::n],
+        'longitudeDeg' : data['longitudeDeg'][::n],
+        'headingDeg' : data['headingDeg'][::n]
         })
 
     return (result)
 
 
 
-def drix_phins_data(L_bags): # regroup all the drix_status data
+def drix_phins_data(L_bags,gps_data_diag): # regroup all the drix_status data
 
     L_pd_file = []
 
@@ -302,14 +310,16 @@ def drix_phins_data(L_bags): # regroup all the drix_status data
             panda_file = handle_phins_data(k) 
             L_pd_file.append(panda_file)
             
-    Drix_phins_data = pd.concat(L_pd_file, ignore_index=True)
-    dic = filter_phins(Drix_phins_data)
+    drix_phins_data = pd.concat(L_pd_file, ignore_index=True)
+    dic,L_heading,sub_data_phins = filter_phins(drix_phins_data,gps_data_diag)
 
-    return(Drix_phins_data, dic)
+    Drix_phins_data = pd.concat([drix_phins_data, sub_data_phins], ignore_index=True)
+
+    return(Drix_phins_data, dic,L_heading)
 
 
 
-def filter_phins(data):
+def filter_phins(data,gps_data_diag):
 
     list_roll = data['rollDeg']
     list_pitch = data['pitchDeg']
@@ -317,7 +327,50 @@ def filter_phins(data):
     dic = {"roll_min":int(np.min(list_roll)*100)/100,"roll_mean":int(np.mean(list_roll)*100)/100,"roll_max":int(np.max(list_roll)*100)/100,
             "pitch_min":int(np.min(list_pitch)*100)/100,"pitch_mean":int(np.mean(list_pitch)*100)/100,"pitch_max":int(np.max(list_pitch)*100)/100}
 
-    return(dic)
+    
+    list_start_t = gps_data_diag['list_start_t']
+    list_act = gps_data_diag['list_act']
+
+    list_heading = data['headingDeg']
+    list_t = data['Time']
+
+    L_heading = []
+    list_act_phins = []
+
+    l = []
+    lt = []
+    i = 1
+    cmt_act = 0
+    
+    for k in range(len(list_t)):
+
+        time = datetime.fromtimestamp(list_t[k])
+        list_act_phins.append(list_act[cmt_act])
+
+        if (i < len(list_act)):
+
+            if ((list_start_t[i-1] >= time) and (time < list_start_t[i])): 
+                l.append(list_heading[k])
+                lt.append(time)
+
+            else:
+                L_heading.append([lt,l,list_act[cmt_act]])
+
+                i += 1
+                cmt_act += 1
+
+                l = [list_heading[k]]
+                lt = [time]
+
+        else:
+            l.append(list_heading[k])
+            lt.append(time)
+
+    L_heading.append([lt,l,list_act[cmt_act]])
+
+    sub_data_phins = pd.DataFrame({"list_act_phins" : list_act_phins})
+
+    return(dic,L_heading,sub_data_phins)
 
 
 

@@ -24,7 +24,7 @@ def handle_GPS_data(bag, val_pred =[None,None], dist_min = 0.008): #fct that pro
         a = np.array((lat[0], long[0]))
         Lat = [lat[0]]
         Long = [long[0]]
-        list_t = [datetime.fromtimestamp(data['Time'][0])]
+        list_t = [datetime.fromtimestamp(int(data['Time'][0]))]
         list_t_str = [str(datetime.fromtimestamp(data['Time'][0]))]
         x,y = p(data['latitude'][0], data['longitude'][0])
         list_x = [x]
@@ -92,18 +92,7 @@ def gps_data(L_bags): # fct that regroupes gps values from the rosbag files
 
     gps_data = pd.concat(L_pd_file, ignore_index=True)
     GPS_data,gps_data_diag,L = statistics_gps(gps_data)
-
-    
-    # print("distance total : ",list_dist[-1]) # in km
-    # n = gps_data['Time'].shape
-    # print(n[0])
-    # dt = ((gps_data['Time'][n[0]-1] - gps_data['Time'][0]).total_seconds()) # in s
-    # d = list_dist[-1]/1000 # in m
-    # print("average speed knot : ", int(((d/dt)*1.9438)*100)/100)
-    # print("average speed m/s : ", int((d/dt)*100)/100)
-
-    # L = [list_dist[-1],int((d/dt)*100)/100,int(((d/dt)*1.9438)*100)/100]
-    
+  
     return(GPS_data,gps_data_diag,L)
 
 
@@ -199,7 +188,6 @@ def statistics_gps(gps_data):
     gps_data_diag =  pd.DataFrame({'list_index': list_index ,'list_start_t': list_start_t ,'list_start_t_str': list_start_t_str , 'list_dist_act': list_dist_act,
         'list_act': list_action2 , 'list_vit_act': list_vit_act,'list_vit_act_n': list_vit_act_n, 'list_dt_act': list_dt_act})
 
-
     return gps_data,gps_data_diag,L
 
 
@@ -272,7 +260,6 @@ def filter_gasolineLevel(data, minutes_range = 10):
             sum = 0
             cmpt = 0
 
-
     result = pd.DataFrame({'Time': list_t , 'Time_str': list_t_str,'gasolineLevel_percent_filtered': list_gaso, 'Time_r' : list_t_red})
 
     return result 
@@ -287,7 +274,7 @@ def handle_phins_data(bag): #fct that processes drix_status data
 
     n = 3 # under sampling rate
 
-    result = pd.DataFrame({'Time': data['Time'][::n],
+    result = pd.DataFrame({'Time_raw': data['Time'][::n],
         'headingDeg': data['headingDeg'][::n],
         'rollDeg': data['rollDeg'][::n],
         'pitchDeg': data['pitchDeg'][::n],
@@ -311,11 +298,11 @@ def drix_phins_data(L_bags,gps_data_diag): # regroup all the drix_status data
             L_pd_file.append(panda_file)
             
     drix_phins_data = pd.concat(L_pd_file, ignore_index=True)
-    dic,L_heading,sub_data_phins = filter_phins(drix_phins_data,gps_data_diag)
+    dic,dic_L,sub_data_phins = filter_phins(drix_phins_data,gps_data_diag)
 
-    Drix_phins_data = pd.concat([drix_phins_data, sub_data_phins], ignore_index=True)
+    Drix_phins_data = pd.concat([drix_phins_data, sub_data_phins], axis=1)
 
-    return(Drix_phins_data, dic,L_heading)
+    return(Drix_phins_data, dic,dic_L)
 
 
 
@@ -327,52 +314,110 @@ def filter_phins(data,gps_data_diag):
     dic = {"roll_min":int(np.min(list_roll)*100)/100,"roll_mean":int(np.mean(list_roll)*100)/100,"roll_max":int(np.max(list_roll)*100)/100,
             "pitch_min":int(np.min(list_pitch)*100)/100,"pitch_mean":int(np.mean(list_pitch)*100)/100,"pitch_max":int(np.max(list_pitch)*100)/100}
 
-    
+    # - - - - - - - -
+
     list_start_t = gps_data_diag['list_start_t']
     list_act = gps_data_diag['list_act']
 
     list_heading = data['headingDeg']
-    list_t = data['Time']
+    list_pitch = data['pitchDeg']
+    list_roll = data['rollDeg']
+    list_t_raw = data['Time_raw']
 
     L_heading = []
+    L_pitch = []
+    L_roll = []
     list_act_phins = []
-
-    l = []
+    list_t = []
+    list_t_str = []
+    lh = []
+    lp = []
+    lr = []
     lt = []
+
     i = 1
     cmt_act = 0
     
-    for k in range(len(list_t)):
+    if (datetime.fromtimestamp(int(list_t_raw[0])) < list_start_t[0]):
+        print("Warning : phins time start before the gps time") 
+        # a mission type could be not represented (because we don't know what kind of mission it was before)
 
-        time = datetime.fromtimestamp(list_t[k])
+    for k in range(len(list_t_raw)):
+   
+        time = datetime.fromtimestamp(int(list_t_raw[k]))
         list_act_phins.append(list_act[cmt_act])
-
+        list_t.append(time)
+        list_t_str.append(str(time))
+    
         if (i < len(list_act)):
 
-            if ((list_start_t[i-1] >= time) and (time < list_start_t[i])): 
-                l.append(list_heading[k])
+            if (time < list_start_t[i]):
+                lh.append(list_heading[k])
+                lp.append(list_pitch[k])
+                lr.append(list_roll[k])
                 lt.append(time)
 
             else:
-                L_heading.append([lt,l,list_act[cmt_act]])
-
+                L_heading.append([lt,lh,list_act[cmt_act]])
+                L_pitch.append([lt,lp,list_act[cmt_act]])
+                L_roll.append([lt,lr,list_act[cmt_act]])
                 i += 1
                 cmt_act += 1
-
-                l = [list_heading[k]]
+                lh = [list_heading[k]]
+                lp = [list_pitch[k]]
+                lr = [list_roll[k]]
                 lt = [time]
 
         else:
-            l.append(list_heading[k])
+            lh.append(list_heading[k])
+            lp.append(list_pitch[k])
+            lr.append(list_roll[k])
             lt.append(time)
 
-    L_heading.append([lt,l,list_act[cmt_act]])
+    L_heading.append([lt,lh,list_act[cmt_act]])
+    L_pitch.append([lt,lp,list_act[cmt_act]])
+    L_roll.append([lt,lr,list_act[cmt_act]])
 
-    sub_data_phins = pd.DataFrame({"list_act_phins" : list_act_phins})
+    sub_data_phins = pd.DataFrame({"act_phins" : list_act_phins, 'Time': list_t, 'Time_str' : list_t_str})
+    dic_L = {"L_heading" : L_heading,"L_pitch" : L_pitch,"L_roll" : L_roll}
 
-    return(dic,L_heading,sub_data_phins)
+    return(dic,dic_L,sub_data_phins)
 
 
+# = = = = = = = = = = = = = = = = = =  /kongsberg_2040/kmstatus  = = = = = = = = = = = = = = = = = = =
+
+
+def handle_kongsberg_status_data(bag): #fct that processes kongsberg_2040/kmstatus data
+    print("on est la")
+    path = bag.csv_path_kongsberg_status
+    data = pd.read_csv(path)
+    print(data)
+    n = 1 # under sampling rate
+
+    result = pd.DataFrame({'Time_raw': data['Time'][::n],
+        'max_depth': data['max_depth'][::n]
+        })
+
+    return (result)
+
+
+def drix_kongsberg_status_data(L_bags): # regroup all kongsberg_2040/kmstatus data
+
+    L_pd_file = []
+
+    for k in L_bags:
+
+        if k.csv_path_kongsberg_status != None: # for the case where there is no kongsberg_2040/kmstatus data in that rosbag
+
+            panda_file = handle_kongsberg_status_data(k) 
+            L_pd_file.append(panda_file)
+            
+    try:
+        kongsberg_status_data = pd.concat(L_pd_file, ignore_index=True)
+        return(kongsberg_status_data)
+
+    except:
+        return(False)
 
 # = = = = = = = = = = = = = = = = = = = = =  Tools  = = = = = = = = = = = = = = = = = = = = = = = = = =
 
@@ -380,10 +425,8 @@ def filter_phins(data,gps_data_diag):
 def filter_binary_msg(data, condition): # report the times (start and end) when the condition is fulfilled
 
     list_event = []
-
     l = data.query(condition).index.tolist()
 
-  
     if not(l):
         # print('Nothing found for ',condition)
         return None

@@ -92,14 +92,14 @@ def genrerate_ihm(report_data):
 				a(" ---------------- Drix_gps ------------")
 
 			with a.p():
-				a("<a href = ../IHM/gps.html>\"<img src=\"../IHM/data/gps.png\" alt=\"GPS\" /></a>")
+				a("<a href = ../IHM/gps/gps.html>\"<img src=\"../IHM/data/gps.png\" alt=\"GPS\" /></a>")
 
 			with a.p():
-				a("<a href = ../IHM/dist.html>Evolution of the distance covered by the Drix </a>")
+				a("<a href = ../IHM/gps/dist.html>Evolution of the distance covered by the Drix </a>")
 				a(" ")
 
 			with a.p():
-				a("<a href = ../IHM/speed.html>Speed history of the Drix mission</a>"+'<br>')
+				a("<a href = ../IHM/gps/speed.html>Speed history of the Drix mission</a>"+'<br>')
 				a(" ")
 
 			with a.p():
@@ -113,7 +113,7 @@ def genrerate_ihm(report_data):
 
 			with a.p():
 				a(" ")
-				a("<a href = ../IHM/drix_status_gasoline.html>\"<img src=\"../IHM/data/drix_status_gasoline.png\" alt=\"Fuel\" /></a>")
+				a("<a href = ../IHM/status/drix_status_gasoline.html>\"<img src=\"../IHM/data/drix_status_gasoline.png\" alt=\"Fuel\" /></a>")
 				a(" ")
 				
 			with a.p():
@@ -155,26 +155,35 @@ def genrerate_ihm(report_data):
 					with a.h3():
 						a("Roll curve : "+'<br>')
 
-					msg1 = "Max negative : "+str(report_data.data_phins["roll_min"])+'<br>'
-					msg2 = "Max positive numerical Value : "+str(report_data.data_phins["roll_max"])+'<br>'
-					msg3 = "mean roll : "+str(report_data.data_phins["roll_mean"])+'<br>'
+					msg1 = "Max negative : "+str(report_data.data_phins["roll_min"])+' (deg)'+'<br>'
+					msg2 = "Max positive numerical Value : "+str(report_data.data_phins["roll_max"])+' (deg)'+'<br>'
+					msg3 = "mean roll : "+str(report_data.data_phins["roll_mean"])+' (deg)'+'<br>'
 
-					a(msg1+msg2+msg3)
+					a(msg1+msg2+msg3+'<br>')
+					a("Roll curve "+"<a href = ../IHM/phins/roll_subplots.html>subplots</a>"+'<br>')
+					a("Roll curve "+"<a href = ../IHM/phins/roll_curve.html>Global plot</a>"+'<br>')
+
 					a(" ")
 
 					with a.h3():
 						a("Pitch curve : "+'<br>')
 
-					msg1 = "Max negative : "+str(report_data.data_phins["pitch_min"])+'<br>'
-					msg2 = "Max positive numerical Value : "+str(report_data.data_phins["pitch_max"])+'<br>'
-					msg3 = "mean pitch : "+str(report_data.data_phins["pitch_mean"])
+					msg1 = "Max negative : "+str(report_data.data_phins["pitch_min"])+' (deg)'+'<br>'
+					msg2 = "Max positive numerical Value : "+str(report_data.data_phins["pitch_max"])+' (deg)'+'<br>'
+					msg3 = "mean pitch : "+str(report_data.data_phins["pitch_mean"])+' (deg)'
 
-					a(msg1+msg2+msg3)
+					a(msg1+msg2+msg3+'<br>')
+
+					a("Pitch curve "+"<a href = ../IHM/phins/pitch_subplots.html>subplots</a>"+'<br>')
+					a("Pitch curve "+"<a href = ../IHM/phins/pitch_curve.html>Global plot</a>"+'<br>')
 
 					a(" ")
 
-					a("Heading curve "+"<a href = ../IHM/heading_subplots.html>subplots</a>")
-					a("Heading curve "+"<a href = ../IHM/heading_curve.html>Global plot</a>")
+					with a.h3():
+						a("Heading curve : "+'<br>')
+
+					a("Heading curve "+"<a href = ../IHM/phins/heading_subplots.html>subplots</a>"+'<br>')
+					a("Heading curve "+"<a href = ../IHM/phins/heading_curve.html>Global plot</a>"+'<br>')
 
 				else:
 					a(msg)

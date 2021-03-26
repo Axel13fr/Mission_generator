@@ -19,8 +19,7 @@ def plot_gps(df, data_diag, save = False):
                      "latitude_deg": "Latitude (deg)",
                      "fix_quality": "GPS quality",
                      'list_v_str':'speed ',
-                     'list_dist_str' : 'Travelled distance'
-                 })
+                     'list_dist_str' : 'Travelled distance'})
 	fig1.update_yaxes(scaleanchor = "x",scaleratio = 1)
 
 	# - - - - - - - - 
@@ -28,7 +27,6 @@ def plot_gps(df, data_diag, save = False):
 	title2 = 'Distance evolution'
 	fig2 = px.line(df, x="Time", y="list_dist", title= title2, labels={"list_dist": "Travelled distance (km)"})
 	fig2.update_layout(hovermode="y")
-
 
 	# - - - - - - - - 
 
@@ -43,18 +41,6 @@ def plot_gps(df, data_diag, save = False):
 	fig3.update_layout(xaxis = dict(tickmode = 'array', tickvals = data_diag['list_index'],ticktext = data_diag['list_start_t_str']))
 	fig3.update_traces(textposition='outside')
 	fig3.update_layout(uniformtext_minsize=8, uniformtext_mode='hide')
-
-
-	# fig3 = px.bar(df, y='latitude_deg', x='action_type', title = title3) 
-		
-
-	# - - - - - - - - 
-
-	# fig = make_subplots(rows=2, cols=2,specs=[[{"colspan": 2}, None],[{}, {}],], shared_xaxes=False, subplot_titles=(title1,title2,title3))	
-	# fig = make_subplots(rows=2, cols=1, shared_xaxes=False, subplot_titles=(title1,title2))	
-	# fig.add_trace(fig1["data"][0], row=1, col=1)
-	# fig.add_trace(fig2["data"][0], row=2, col=1)
-	# fig.add_trace(fig3["data"][0], row=2, col=2)
 	
 	# - - - - - - - -
 
@@ -64,19 +50,18 @@ def plot_gps(df, data_diag, save = False):
 	# fig.show()
 
 	# - - - - - - - - 
-
+	plt.figure(1)
 	plt.plot(df['longitude_deg'], df['latitude_deg'])
 	plt.axis('equal')
 	plt.title("Gnss positions")
 
 	if save == True:
 		plt.savefig("../IHM/data/gps.png")
-		fig1.write_html("../IHM/gps.html")
-		fig2.write_html("../IHM/dist.html")
-		fig3.write_html("../IHM/speed.html")
+		fig1.write_html("../IHM/gps/gps.html")
+		fig2.write_html("../IHM/gps/dist.html")
+		fig3.write_html("../IHM/gps/speed.html")
 
 	# plt.show() #/!\ must be after savefig()
-
 
 
 
@@ -87,60 +72,54 @@ def plot_drix_status(data,save = False):
 				"gasolineLevel_percent_filtered": "Gasoline Level (%)"})
 	fig.update_layout(yaxis_range=[0,100])
 
-	plt.plot(data['Time_r'], data['gasolineLevel_percent_filtered'])
+	plt.figure(2)
+	plt.plot(data['Time_str'], data['gasolineLevel_percent_filtered'])
 	plt.xticks(rotation=45, ha="right")
 	plt.title("Gasoline Level")
 
 	if save == True:
 		plt.savefig("../IHM/data/drix_status_gasoline.png")
-		fig.write_html("../IHM/drix_status_gasoline.html")
+		fig.write_html("../IHM/status/drix_status_gasoline.html")
 	# fig.show()
+	# plt.show()
 
 
 
-
-def plot_phins_heading_curve(L_heading, save = False):
+def plot_phins_curve(L,name, N_col = 5, save = False):
 
 	color10_16 = {'IdleBoot' : 'blue','Idle' : 'cyan','goto' : 'magenta','follow_me' : "#636efa",'box-in': "#00cc96","path_following" : "#EF553B","truc": 'brown'}
-	n = len(L_heading)
-
+	n = len(L)
 	N_col = 5
 	N_row = subplots_N_rows(n, N_col)
 
 	Title = []
-	for val in L_heading:
-		Title.append(val[2]+" heading")
+	for val in L:
+		Title.append(val[2]+" "+name)
 
 	fig = make_subplots(rows=N_row, cols=N_col, shared_xaxes=False,subplot_titles = Title)	
-
 	l = subplots_col_ligne(n, N_col, N_row)
 
-	for k in range(n):
-		
+	for k in range(n):	
 		n_row,n_col = l[k]
-
-		fig1 = px.line(x = L_heading[k][0], y =L_heading[k][1] ,title = "Heading curve", labels={ "x": "Date", "y": "Heading curve (deg)"})		
-		fig1.update_traces(line_color= color10_16[L_heading[k][2]])
-
+		fig1 = px.line(x = L[k][0], y =L[k][1] ,title = name+" curve", labels={ "x": "Date", "y": "Heading curve (deg)"})		
+		fig1.update_traces(line_color= color10_16[L[k][2]])
 		fig.add_trace(fig1["data"][0], row=n_row, col=n_col)
 
-	fig.show()
-	fig.write_html("../IHM/heading_subplots.html")
+	# fig.show()
+	if save == True:
+		fig.write_html("../IHM/phins/"+name+"_subplots.html")
+
+
+
+def plot_global_phins_curve(data, curve, name, save = False):
+
+	fig = px.scatter(data, x = 'Time', y = curve ,title = "name curve", color = "act_phins")
+	# fig.show()
 
 	if save == True:
-		fig.write_html("../IHM/heading_subplots.html")
-
-def plot_global_phins_heading_curve(data, save = False):
-
-	fig = px.scatter(data, x = 'Time', y ='headingDeg' ,title = "Heading curve", color = "list_act_phins")
-	fig.show()
-
-	if save == True:
-		fig.write_html("../IHM/heading_curve.html")
-
+		fig.write_html("../IHM/phins/"+name+"_curve.html")
 		
-
-
+		
 
 def subplots_N_rows(n_data, n_col):
 	return(n_data//n_col + (n_data%n_col)%1 + 1)

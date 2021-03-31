@@ -30,3 +30,8 @@ Ce Script permet la mise en valeur des données avec la création de graphiques.
 Ce Script permet de générer le rapport de mission en format html.
 
 
+
+### Dépendances
+Les données **gps** sont les données de référence.  
+Les données de la **phins** utilisent les données **gps**.  
+Les données **gps** sont complétées par des données issues de **mothership_gps** qui pour cela utilise les données **gps**.

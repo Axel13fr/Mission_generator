@@ -48,8 +48,8 @@ def display_date(date):
 	month = int(l[1])
 	year = int(l[2])
 	hours = int(l[3])
-	seconds = int(l[4])
-	minutes = int(l[5])
+	minutes = int(l[4])
+	seconds = int(l[5])
 
 	return(datetime(year, month, days, hours, minutes, seconds).ctime())
 	

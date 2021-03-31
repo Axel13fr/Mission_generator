@@ -9,28 +9,45 @@ from plotly.subplots import make_subplots
 # - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 
+# = = = = = = = = = = = = = = = = = =  /gps  = = = = = = = = = = = = = = = = = = = = = = = =
+
 def plot_gps(df, data_diag, save = False):
+
+	try: # for the case where we have processed the mothership_gps data
+		test = df['dist_drix_mothership'][0]
+		list_hover_data =['Time_str','action_type','dist_drix_mothership','list_v_str','list_dist_str']
+
+	except:
+		list_hover_data =['Time_str','action_type','list_v_str','list_dist_str']		
 
 	title1 = "Gnss positions"
 	fig1 = px.scatter(df, x='longitude_deg', y='latitude_deg', 
-		hover_data =['Time_str','action_type','list_v_str','list_dist_str'], 
+		hover_data = list_hover_data, 
 		color = 'fix_quality', title = title1 ,labels={
                      "longitude_deg": "Longitude (deg)",
                      "latitude_deg": "Latitude (deg)",
                      "fix_quality": "GPS quality",
+                     "action_type" : "action type",
+                     "dist_drix_mothership" : "Dist Drix/ship",
                      'list_v_str':'speed ',
                      'list_dist_str' : 'Travelled distance'})
 	fig1.update_yaxes(scaleanchor = "x",scaleratio = 1)
 
 	# - - - - - - - - 
 	
-	title2 = 'Distance evolution'
+	if len(data_diag['list_index']) == 1:
+		title2 = 'Distance evolution (Drix in static position)'
+	else:
+		title2 = 'Distance evolution'
 	fig2 = px.line(df, x="Time", y="list_dist", title= title2, labels={"list_dist": "Travelled distance (km)"})
 	fig2.update_layout(hovermode="y")
 
 	# - - - - - - - - 
 
-	title3 = 'Speed history'
+	if len(data_diag['list_index']) == 1:
+		title3 = 'Speed history (Drix in static position)'
+	else:
+		title3 = 'Speed history'
 	fig3 = px.bar(data_diag, y='list_vit_act', x='list_index',text = 'list_vit_act',hover_data =['list_vit_act_n','list_dist_act','list_dt_act'], color = 'list_act', title = title3, 
 		labels={     "list_vit_act": "Drix speed (m/s)",
 					 "list_vit_act_n": "Drix speed (knot)",
@@ -64,6 +81,8 @@ def plot_gps(df, data_diag, save = False):
 
 
 
+# = = = = = = = = = = = = = = = =  /drix_status  = = = = = = = = = = = = = = = = = = = = = = = =
+
 def plot_drix_status(data,save = False):
 
 	fig = px.line(data, x='Time_str', y='gasolineLevel_percent_filtered', title = "Gasoline Level",
@@ -83,6 +102,8 @@ def plot_drix_status(data,save = False):
 	# plt.show()
 
 
+
+# = = = = = = = = = = = = = = = = = = = /d_phins/aipov  = = = = = = = = = = = = = = = = = = = = = = = =
 
 def plot_phins_curve(L,name, N_col = 5, save = False):
 
@@ -118,7 +139,49 @@ def plot_global_phins_curve(data, curve, name, save = False):
 	if save == True:
 		fig.write_html("../IHM/phins/"+name+"_curve.html")
 		
-		
+
+
+
+# = = = = = = = = = = = = = = =  /kongsberg_2040/kmstatus  = = = = = =  = = = = = = = = = = = = = = 
+
+
+# = = = = = = = = = = = = = = = = = =  /diagnostics  = = = = = = = = = = = = = = = = = = = = = = = =
+
+
+
+# = = = = = = = = = = = = = = = = = = /Telemetry2  = = = = = = = = = = = = = = = = = = = = = = = = = 
+
+def plot_telemetry(data, save = True):
+
+	# fig1 = px.scatter(data, x = 'Time_raw', y = 'percent_main_battery')
+	# fig1.show()
+
+	fig2 = px.line(data, x = 'Time_raw', y = 'oil_pressure_Bar')
+	fig2.show()
+
+	# fig21 = px.line(data, x = 'Time_raw', y = 'engine_water_temperature_deg')
+	# fig21.show()
+
+	# fig3 = px.scatter(data, x = 'Time_raw', y = 'time_left_main_battery_mins')
+	# fig3.show()
+
+	# fig4 = px.scatter(data, x = 'Time_raw', y = 'main_battery_voltage_V')
+	# fig4.show()
+
+	fig42 = px.scatter(data, x = 'Time_raw', y = 'engine_battery_voltage_V')
+	fig42.show()
+
+	# fig5 = px.scatter(data, x = 'Time_raw', y = 'consumed_current_main_battery_Ah')
+	# fig5.show()
+
+	# fig6 = px.scatter(data, x = 'Time_raw', y = 'current_main_battery_A')
+	# fig6.show()
+
+
+
+
+# = = = = = = = = = = = = = = = = = = = = Tools  = = = = = = = = = = = = = = = = = = = = = = = = = =
+
 
 def subplots_N_rows(n_data, n_col):
 	return(n_data//n_col + (n_data%n_col)%1 + 1)

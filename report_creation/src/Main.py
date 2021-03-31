@@ -30,6 +30,8 @@ class bagfile(object):
         self.csv_path_d_phins = None
         self.diagnostics_path = None
         self.list_diag_paths = None
+        self.csv_path_telemetry = None 
+        self.csv_path_mothership = None
 
         try: # for the non conformed file
             self.recup_date_file()
@@ -105,12 +107,30 @@ class bagfile(object):
             # except:
             #     pass
 
-        if self.csv_path_d_phins == None:
+        if self.csv_path_telemetry == None:
             try:
-                csv_file4 = d.message_by_topic(topic='/d_phins/aipov')
-                self.csv_path_d_phins = csv_file4
+                csv_file4 = d.message_by_topic('/telemetry2')
+                self.csv_path_telemetry = csv_file4
             except:
                 pass
+
+
+        if self.csv_path_d_phins == None:
+            try:
+                csv_file5 = d.message_by_topic(topic='/d_phins/aipov')
+                self.csv_path_d_phins = csv_file5
+            except:
+                pass
+
+        if self.csv_path_mothership == None:
+            try:
+                csv_file6 = d.message_by_topic(topic='/mothership_gps')
+                self.csv_path_mothership = csv_file6
+            except:
+                pass
+
+
+
 
         self.recover_past_report_diag_data()
 
@@ -142,6 +162,13 @@ class bagfile(object):
 
                 if f == "kongsberg_2040_kmstatus.csv":
                     self.csv_path_kongsberg_status = path + '/' + f
+
+                if f == "telemetry2.csv":
+                    self.csv_path_telemetry = path + '/' + f
+
+                if f == "mothership_gps.csv":
+                    self.csv_path_mothership = path + '/' + f
+
         except:
             pass
 
@@ -197,7 +224,7 @@ def recup_data(date_d, date_f, path):
     return(L_bags)
 
 
-def remove_files(path): # fct wich removes all files containing csv files
+def remove_files(path): # fct which removes all files containing csv files
     list_files = os.listdir(path)
     compt = 0
     for file in list_files:
@@ -232,71 +259,106 @@ if __name__ == '__main__':
 
     path = "/home/julienpir/Documents/iXblue/20210120 DriX6 Survey OTH/mission_logs"
     date_d = "01-02-2021-08-08-00"
-    # date_f = "01-02-2021-11-40-09"
-    date_f = "01-02-2021-09-40-09"
+    date_f = "01-02-2021-11-41-09"
+    # date_f = "01-02-2021-10-30-09"
 
-    # remove_files(path) 
+    # remove_files(path)
+
+
+    # -------------------------------------------
+    # - - - - - - Data Recovery - - - - - - -
+    # -------------------------------------------
 
     L_bags = recup_data(date_d, date_f, path)
 
+    # -------------------------------------------
+    # - - - - - - Data Processing - - - - - - -
+    # ------------------------------------------- 
 
-    # # - - - - - - GPS  - - - - - - - - - 
-
-    # GPS_data,gps_data_diag,L_gps = Dp.gps_data(L_bags)
-    # Disp.plot_gps(GPS_data,gps_data_diag,True)
+    # - - GPS - -
+    GPS_data,gps_data_diag,L_gps = Dp.gps_data(L_bags)
 
     
-    # # - - - - - - Drix_status - - - - -
+    # - - Drix_status - -
+    Drix_status_data = Dp.drix_status_data(L_bags)
+    data_status_smooth = Dp.filter_gasolineLevel(Drix_status_data)
 
-    # Drix_status_data = Dp.drix_status_data(L_bags)
-    # data_status_smooth = Dp.filter_gasolineLevel(Drix_status_data)
-    # Disp.plot_drix_status(data_status_smooth,True)
+
+    # - - Phins - - -
+    Phins_data, dic,dic_L = Dp.drix_phins_data(L_bags,gps_data_diag) # Needs list_act and list_start_t of gps_data_diag
     
-    # L_emergency_mode = Dp.filter_binary_msg(Drix_status_data,'emergency_mode == True')
-    # L_rm_ControlLost = Dp.filter_binary_msg(Drix_status_data,'remoteControlLost == True')
-    # L_shutdown_req = Dp.filter_binary_msg(Drix_status_data,'shutdown_requested == True')
-    # L_reboot_req = Dp.filter_binary_msg(Drix_status_data,'reboot_requested == True')
 
 
-    # # - - - - - - Phins - - - - - - - 
-
-    # Phins_data, dic,dic_L = Dp.drix_phins_data(L_bags,gps_data_diag) # Needs list_act and list_start_t of gps_data_diag
-    # Disp.plot_phins_curve(dic_L["L_heading"],'heading',save = True)
-    # Disp.plot_phins_curve(dic_L["L_pitch"],'pitch',save = True)
-    # Disp.plot_phins_curve(dic_L["L_roll"],'roll',save = True)
-    # Disp.plot_global_phins_curve(Phins_data, 'headingDeg', 'heading', save = True)
-    # Disp.plot_global_phins_curve(Phins_data, 'pitchDeg', 'pitch', save = True)
-    # Disp.plot_global_phins_curve(Phins_data, 'rollDeg', 'roll', save = True)
+    # - - kongsberg_status - -
+    Drix_kongsberg_status_data = Dp.drix_kongsberg_status_data(L_bags)
 
 
-    # # - - - - kongsberg_status - - - - 
-
-    # Drix_kongsberg_status_data = Dp.drix_kongsberg_status_data(L_bags)
-
-
-    # # - - - - diagnostics - - - - 
-
-    # diag_data = Dp.drix_diagnostics_data(L_bags)
+    # - - diagnostics - -
+    diag_data = Dp.drix_diagnostics_data(L_bags)
 
 
-    # # - - - - - - IHM - - - - - - - - 
+    # - - Telemetry - -
+    telemetry_data = Dp.drix_telemetry_data(L_bags)
 
-    # report_data = IHM.Report_data(date_d, date_f) # class to transport data to the ihm
+  
+    # - - mothership_gps - -
+    mothership_gps_data = Dp.drix_mothership_gps_data(L_bags)
+    GPS_data = Dp.add_dist_mothership_drix(GPS_data,mothership_gps_data)
 
-    # report_data.dist = L_gps[0]
-    # report_data.avg_speed = L_gps[1]
-    # report_data.avg_speed_n = L_gps[2]
 
-    # report_data.L_emergency_mode = L_emergency_mode
-    # report_data.L_rm_ControlLost = L_rm_ControlLost
-    # report_data.L_shutdown_req = L_shutdown_req
-    # report_data.L_reboot_req = L_reboot_req
 
-    # report_data.data_phins = dic
+    # -------------------------------------------
+    # - - - - - - Data Visualization - - - - - -
+    # -------------------------------------------
 
-    # # - - - - - 
+    # - - GPS - -
+    Disp.plot_gps(GPS_data,gps_data_diag,True)
 
-    # IHM.genrerate_ihm(report_data)
+
+    # - - Drix_status - -
+    Disp.plot_drix_status(data_status_smooth)
+    
+    L_emergency_mode = Dp.filter_binary_msg(Drix_status_data,'emergency_mode == True')
+    L_rm_ControlLost = Dp.filter_binary_msg(Drix_status_data,'remoteControlLost == True')
+    L_shutdown_req = Dp.filter_binary_msg(Drix_status_data,'shutdown_requested == True')
+    L_reboot_req = Dp.filter_binary_msg(Drix_status_data,'reboot_requested == True')
+
+
+    # - - Phins - -
+    Disp.plot_phins_curve(dic_L["L_heading"],'heading',save = True)
+    Disp.plot_phins_curve(dic_L["L_pitch"],'pitch',save = True)
+    Disp.plot_phins_curve(dic_L["L_roll"],'roll',save = True)
+    Disp.plot_global_phins_curve(Phins_data, 'headingDeg', 'heading', save = True)
+    Disp.plot_global_phins_curve(Phins_data, 'pitchDeg', 'pitch', save = True)
+    Disp.plot_global_phins_curve(Phins_data, 'rollDeg', 'roll', save = True)
+
+
+    # - - Telemetry - -
+    Disp.plot_telemetry(telemetry_data)
+
+
+
+
+    # -------------------------------------------
+    # - - - - - - Report Creation - - - - - - -
+    # -------------------------------------------
+
+    report_data = IHM.Report_data(date_d, date_f) # class to transport data to the ihm
+
+    report_data.dist = L_gps[0]
+    report_data.avg_speed = L_gps[1]
+    report_data.avg_speed_n = L_gps[2]
+
+    report_data.L_emergency_mode = L_emergency_mode
+    report_data.L_rm_ControlLost = L_rm_ControlLost
+    report_data.L_shutdown_req = L_shutdown_req
+    report_data.L_reboot_req = L_reboot_req
+
+    report_data.data_phins = dic
+
+    # - - - - -
+
+    IHM.genrerate_ihm(report_data)
 
 
 

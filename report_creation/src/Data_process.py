@@ -96,13 +96,13 @@ def gps_data(L_bags): # fct that regroupes gps values from the rosbag files
             L_pd_file.append(panda_file)
 
     gps_data = pd.concat(L_pd_file, ignore_index=True)
-    GPS_data,gps_data_diag,L = statistics_gps(gps_data)
+    GPS_data,gps_data_diag,L = diagnostics_gps(gps_data)
   
     return(GPS_data,gps_data_diag,L)
 
 
 
-def statistics_gps(gps_data):
+def diagnostics_gps(gps_data):
 
     lx = gps_data["list_x"]
     ly = gps_data['list_y']
@@ -129,7 +129,8 @@ def statistics_gps(gps_data):
         list_v_str.append(' '+str(abs(int(((d*1000)/dt)*100)/100))+' (m/s)') # m/s
         list_v.append(abs(d*1000/dt)) 
 
-    list_v[0] = list_v[1] # in order to have the same length than lhe others list, we duplicate the first value
+    if len(lx) > 2: # to avoid problematic cases
+        list_v[0] = list_v[1] # in order to have the same length than the others list, we duplicate the first value
 
     gps_data = gps_data.assign(list_dist = list_dist)
     gps_data = gps_data.assign(list_dist_str = list_dist_str)
@@ -139,59 +140,70 @@ def statistics_gps(gps_data):
 
     # - - - - - - - - - - - - - - 
 
-    d = list_dist[-1]*1000
-    dt = ((gps_data['Time'][len(list_dist)-1] - gps_data['Time'][0]).total_seconds()) # in s
-    L = [list_dist[-1],int((d/dt)*100)/100,int(((d/dt)*1.9438)*100)/100]    
+    if len(lx) == 1: # when there is only one value, the Drix is static
+        L = [0,0,0]
+
+    else:
+        d = list_dist[-1]*1000
+        dt = ((gps_data['Time'][len(list_dist)-1] - gps_data['Time'][0]).total_seconds()) # in s
+        L = [list_dist[-1],int((d/dt)*100)/100,int(((d/dt)*1.9438)*100)/100]    
 
     # - - - - - - - - - - - - - - 
 
-    list_action = gps_data['action_type'] 
-    list_vit_act = []
-    list_vit_act_n = [] # speeed in knot
-    list_action2 = [list_action[1]] # in order to have the same length than list_v
-    list_dist_act = []
-    list_start_t_str =[gps_data['Time_str'][0]]
-    list_start_t =[gps_data['Time'][0]]
-    list_dt_act = []
-
-    previous_act = list_action[1] # due to list_v length, we neglect the first value
-    previous_dist = 0
-    previous_t = gps_data['Time'][0]
+    if len(lx) == 1:
+        gps_data_diag =  pd.DataFrame({'list_index': [1] ,'list_start_t': [gps_data['Time'][0]],'list_start_t_str': [gps_data['Time_str'][0]] , 'list_dist_act': [0],
+            'list_act': gps_data['action_type'][0] , 'list_vit_act': [0],'list_vit_act_n': [0], 'list_dt_act': [0]})
 
 
-    for k in range(2,len(list_action)): # compute the mean speed by action
+    else:  
 
-        if list_action[k] != previous_act:
+        list_action = gps_data['action_type'] 
+        list_vit_act = []
+        list_vit_act_n = [] # speeed in knot
+        list_action2 = [list_action[1]] # in order to have the same length than list_v
+        list_dist_act = []
+        list_start_t_str =[gps_data['Time_str'][0]]
+        list_start_t =[gps_data['Time'][0]]
+        list_dt_act = []
 
-            list_action2.append(list_action[k])
-            list_start_t_str.append(gps_data['Time_str'][k])
-            list_start_t.append(gps_data['Time'][k])
-            
-            d_act = int((list_dist[k-1]-previous_dist)*1000)/1000
-            dt = ((gps_data['Time'][k-1] - previous_t).total_seconds()) 
-
-            list_dt_act.append(int((dt/60)*100)/100) # in minute
-            list_dist_act.append(d_act) # in km
-            list_vit_act.append(int(((d_act*1000)/dt)*100)/100) # in m/s
-            list_vit_act_n.append(int(((d_act*1000)/dt)*1.9438*100)/100) # in knot
-
-            previous_act = list_action[k]
-            previous_t = gps_data['Time'][k-1] 
-            previous_dist = list_dist[k-1]
+        previous_act = list_action[1] # due to list_v length, we neglect the first value
+        previous_dist = 0
+        previous_t = gps_data['Time'][0]
 
 
-    d_act = int((list_dist[-1]-previous_dist)*1000)/1000
-    dt = ((gps_data['Time'][len(lx)-1] - previous_t).total_seconds())
+        for k in range(2,len(list_action)): # compute the mean speed by action
 
-    list_dt_act.append(int((dt/60)*100)/100) # in minute
-    list_dist_act.append(d_act) # in km
-    list_vit_act.append(int(((d_act*1000)/dt)*100)/100) # in m/s
-    list_vit_act_n.append(int(((d_act*1000)/dt)*1.9438*100)/100) # in knot
+            if list_action[k] != previous_act:
 
-    list_index = range(len(list_action2))
+                list_action2.append(list_action[k])
+                list_start_t_str.append(gps_data['Time_str'][k])
+                list_start_t.append(gps_data['Time'][k])
+                
+                d_act = int((list_dist[k-1]-previous_dist)*1000)/1000
+                dt = ((gps_data['Time'][k-1] - previous_t).total_seconds()) 
 
-    gps_data_diag =  pd.DataFrame({'list_index': list_index ,'list_start_t': list_start_t ,'list_start_t_str': list_start_t_str , 'list_dist_act': list_dist_act,
-        'list_act': list_action2 , 'list_vit_act': list_vit_act,'list_vit_act_n': list_vit_act_n, 'list_dt_act': list_dt_act})
+                list_dt_act.append(int((dt/60)*100)/100) # in minute
+                list_dist_act.append(d_act) # in km
+                list_vit_act.append(int(((d_act*1000)/dt)*100)/100) # in m/s
+                list_vit_act_n.append(int(((d_act*1000)/dt)*1.9438*100)/100) # in knot
+
+                previous_act = list_action[k]
+                previous_t = gps_data['Time'][k-1] 
+                previous_dist = list_dist[k-1]
+
+
+        d_act = int((list_dist[-1]-previous_dist)*1000)/1000
+        dt = ((gps_data['Time'][len(lx)-1] - previous_t).total_seconds())
+
+        list_dt_act.append(int((dt/60)*100)/100) # in minute
+        list_dist_act.append(d_act) # in km
+        list_vit_act.append(int(((d_act*1000)/dt)*100)/100) # in m/s
+        list_vit_act_n.append(int(((d_act*1000)/dt)*1.9438*100)/100) # in knot
+
+        list_index = range(len(list_action2))
+
+        gps_data_diag =  pd.DataFrame({'list_index': list_index ,'list_start_t': list_start_t ,'list_start_t_str': list_start_t_str , 'list_dist_act': list_dist_act,
+            'list_act': list_action2 , 'list_vit_act': list_vit_act,'list_vit_act_n': list_vit_act_n, 'list_dt_act': list_dt_act})
 
     return gps_data,gps_data_diag,L
 
@@ -205,9 +217,9 @@ def handle_drix_status_data(bag): #fct that processes drix_status data
     data = pd.read_csv(path)
     n = 1 # under sampling rate
 
-    n_end = index_time_limit(data['Time'],bag.datetime_date_f,True)
+    list_t,list_t_str,n_end = index_time_limit(data['Time'],bag.datetime_date_f,n)
 
-    result = pd.DataFrame({'Time': data['Time'][:n_end:n],
+    result = pd.DataFrame({'Time_raw': data['Time'][:n_end:n],
         'gasolineLevel_percent': data['gasolineLevel_percent'][:n_end:n],
         'drix_mode': data['drix_mode'][:n_end:n],
         'emergency_mode': data['emergency_mode'][:n_end:n],
@@ -215,6 +227,9 @@ def handle_drix_status_data(bag): #fct that processes drix_status data
         'shutdown_requested' : data['shutdown_requested'][:n_end:n],
         'reboot_requested' : data['reboot_requested'][:n_end:n]
         })
+
+    result = result.assign(Time = list_t)
+    result = result.assign(Time_str = list_t_str)
 
     return (result)
 
@@ -238,11 +253,11 @@ def drix_status_data(L_bags): # regroup all the drix_status data
 
 def filter_gasolineLevel(data, minutes_range = 10):
 
-    d = datetime.fromtimestamp(data['Time'][0]) - timedelta(hours=1, minutes=00)
-    list_t = []
-    list_t_str = []
+    d = data['Time'][0]
     list_t_red = []
     list_gaso = []
+    list_t = []
+    list_t_str = []
 
     sum = 0
     cmpt = 0
@@ -250,7 +265,7 @@ def filter_gasolineLevel(data, minutes_range = 10):
 
     for k in range(len(data['gasolineLevel_percent'])):
 
-        d = datetime.fromtimestamp(data['Time'][k]) - timedelta(hours=1, minutes=00)
+        d = data['Time'][k]
         val = int(d.strftime('%M'))
 
         sum += data['gasolineLevel_percent'][k]
@@ -259,9 +274,9 @@ def filter_gasolineLevel(data, minutes_range = 10):
         if (val%minutes_range == 0) and (d.strftime('%H:%M') != past_val):
             
             list_gaso.append(int(sum/cmpt))
-            list_t_str.append(str(datetime.fromtimestamp(int(data['Time'][k]))- timedelta(hours=1, minutes=00)))
-            list_t.append(datetime.fromtimestamp(int(data['Time'][k]))- timedelta(hours=1, minutes=00))
-            list_t_red.append((datetime.fromtimestamp(int(data['Time'][k]))- timedelta(hours=1, minutes=00)).strftime('%H:%M'))
+            list_t_str.append(data['Time'][k])
+            list_t.append(data['Time_str'][k])
+            list_t_red.append((data['Time'][k]).strftime('%H:%M'))
 
             past_val = d.strftime('%H:%M')
             sum = 0
@@ -281,8 +296,7 @@ def handle_phins_data(bag): #fct that processes drix_status data
 
     n = 3 # under sampling rate
 
-    n_end = index_time_limit(data['Time'],bag.datetime_date_f,True)
-
+    list_t,list_t_str,n_end = index_time_limit(data['Time'],bag.datetime_date_f,n)
 
     result = pd.DataFrame({'Time_raw': data['Time'][:n_end:n],
         'headingDeg': data['headingDeg'][:n_end:n],
@@ -291,6 +305,9 @@ def handle_phins_data(bag): #fct that processes drix_status data
         'latitudeDeg' : data['latitudeDeg'][:n_end:n],
         'longitudeDeg' : data['longitudeDeg'][:n_end:n],
         })
+
+    result = result.assign(Time = list_t)
+    result = result.assign(Time_str = list_t_str)
 
     return (result)
 
@@ -337,8 +354,6 @@ def filter_phins(data,gps_data_diag):
     L_pitch = []
     L_roll = []
     list_act_phins = []
-    list_t = []
-    list_t_str = []
     lh = []
     lp = []
     lr = []
@@ -355,8 +370,6 @@ def filter_phins(data,gps_data_diag):
    
         time = datetime.fromtimestamp(int(list_t_raw[k])) - timedelta(hours=1, minutes=00)
         list_act_phins.append(list_act[cmt_act])
-        list_t.append(time)
-        list_t_str.append(str(time))
     
         if (i < len(list_act)):
 
@@ -387,7 +400,7 @@ def filter_phins(data,gps_data_diag):
     L_pitch.append([lt,lp,list_act[cmt_act]])
     L_roll.append([lt,lr,list_act[cmt_act]])
 
-    sub_data_phins = pd.DataFrame({"act_phins" : list_act_phins, 'Time': list_t, 'Time_str' : list_t_str})
+    sub_data_phins = pd.DataFrame({"act_phins" : list_act_phins})
     dic_L = {"L_heading" : L_heading,"L_pitch" : L_pitch,"L_roll" : L_roll}
 
     return(dic,dic_L,sub_data_phins)
@@ -403,11 +416,15 @@ def handle_kongsberg_status_data(bag): #fct that processes kongsberg_2040/kmstat
     # print(data)
     n = 1 # under sampling rate
 
-    n_end = index_time_limit(data['Time'],bag.datetime_date_f,True)
+    list_t,list_t_str,n_end = index_time_limit(data['Time'],bag.datetime_date_f,n)
+
 
     result = pd.DataFrame({'Time_raw': data['Time'][:n_end:n],
         'max_depth': data['max_depth'][:n_end:n]
         })
+
+    result = result.assign(Time = list_t)
+    result = result.assign(Time_str = list_t_str)
 
     return (result)
 
@@ -475,8 +492,127 @@ def drix_diagnostics_data(L_bags): # regroup all /diagnostics data
 
 
 
+# = = = = = = = = = = = = = = = = = = /Telemetry2  = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-# = = = = = = = = = = = = = = = = = = = = =  Tools  = = = = = = = = = = = = = = = = = = = = = = = = = =
+def handle_telemetry_data(bag): #fct that processes /Telemetry2 data
+
+    path = bag.csv_path_telemetry
+    data = pd.read_csv(path)
+    n = 10 # under sampling rate
+
+    list_t,list_t_str,n_end = index_time_limit(data['Time'],bag.datetime_date_f,n)
+
+    result = pd.DataFrame({'Time_raw': data['Time'][:n_end:n],
+        'oil_pressure_Bar': data['oil_pressure_Bar'][:n_end:n],
+        'engine_water_temperature_deg': data['engine_water_temperature_deg'][:n_end:n],
+        'main_battery_voltage_V': data['main_battery_voltage_V'][:n_end:n],
+        'engine_battery_voltage_V': data['engine_battery_voltage_V'][:n_end:n],
+        'percent_main_battery': data['percent_main_battery'][:n_end:n],
+        'percent_backup_battery': data['percent_backup_battery'][:n_end:n],
+        'consumed_current_main_battery_Ah': data['consumed_current_main_battery_Ah'][:n_end:n],
+        'current_main_battery_A' : data['current_main_battery_A'][:n_end:n],
+        'time_left_main_battery_mins' : data['time_left_main_battery_mins'][:n_end:n],
+        'engine_battery_voltage_V' : data['engine_battery_voltage_V'][:n_end:n]
+        })
+
+    result = result.assign(Time = list_t)
+    result = result.assign(Time_str = list_t_str)
+
+    return (result)
+
+
+def drix_telemetry_data(L_bags): # regroup all /Telemetry2 data'time_left_main_battery_mins'
+
+    L_pd_file = []
+
+    for k in L_bags:
+
+        if k.csv_path_telemetry != None: # for the case where there is no /Telemetry2 data in that rosbag
+
+            panda_file = handle_telemetry_data(k) 
+            L_pd_file.append(panda_file)
+            
+    try:
+        telemetry_data = pd.concat(L_pd_file, ignore_index=True)
+        return(telemetry_data)
+
+    except:
+        return(False)
+
+
+
+# = = = = = = = = = = = = = = = = = = /mothership_gps  = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+def handle_mothership_gps_data(bag): #fct that processes /Telemetry2 data
+
+    path = bag.csv_path_mothership
+    data = pd.read_csv(path)
+    n = 1 # under sampling rate
+
+    list_t,list_t_str,n_end = index_time_limit(data['Time'],bag.datetime_date_f,n)
+
+    result = pd.DataFrame({'Time_raw': data['Time'][:n_end:n], 
+        'latitude' : data['latitude'][:n_end:n],
+        'longitude' : data['longitude'][:n_end:n]
+        })
+
+
+    result = result.assign(Time = list_t)
+    result = result.assign(Time_str = list_t_str)
+
+    return (result)
+
+
+def drix_mothership_gps_data(L_bags): # regroup all /Telemetry2 data'time_left_main_battery_mins'
+
+    L_pd_file = []
+
+    for k in L_bags:
+
+        if k.csv_path_mothership != None: # for the case where there is no /Telemetry2 data in that rosbag
+
+            panda_file = handle_mothership_gps_data(k) 
+            L_pd_file.append(panda_file)
+            
+    try:
+        mothership_gps_data = pd.concat(L_pd_file, ignore_index=True)
+        return(mothership_gps_data)
+
+    except:
+        return(False)
+
+
+def add_dist_mothership_drix(GPS_data,mothership_gps_data): # compute the distance btw the drix and the mothership
+    
+    list_t_drix = GPS_data['Time']
+    u = 0
+    p = Proj(proj='utm',zone=10,ellps='WGS84')
+    list_dist_drix_mship = []
+
+    while mothership_gps_data['Time'][0] > list_t_drix[u]: 
+        u += 1
+        
+    for k in range(len(mothership_gps_data['Time'])):
+
+        if u < len(list_t_drix):
+
+            if mothership_gps_data['Time'][k] == list_t_drix[u]:
+
+                x,y = p(mothership_gps_data['latitude'][k], mothership_gps_data['longitude'][k])
+                a = np.array((x, y))
+                b = np.array((GPS_data['list_x'][u], GPS_data['list_y'][u]))
+                d = np.linalg.norm(a - b)/1000 # in km
+
+                list_dist_drix_mship.append(int(abs(d)*1000)/1000)
+
+                u += 1
+
+
+    GPS_data = GPS_data.assign(dist_drix_mothership = list_dist_drix_mship)
+
+    return GPS_data
+
+# = = = = = = = = = = = = = = = = = = = = Tools  = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 
 def filter_binary_msg(data, condition): # report the times (start and end) when the condition is fulfilled
@@ -489,15 +625,15 @@ def filter_binary_msg(data, condition): # report the times (start and end) when 
         return None
 
     v_ini = l[0]
-    debut = datetime.fromtimestamp(int(data['Time'][l[0]])) - timedelta(hours=1, minutes=00)
+    debut = data['Time'][l[0]]
 
     for k in range(1,len(l)):
         if l[k] != (v_ini + 1):
-            fin = datetime.fromtimestamp(int(data['Time'][l[k-1]])) - timedelta(hours=1, minutes=00)
+            fin = data['Time'][l[k-1]]
 
             list_event.append([debut,fin])
             v_ini = l[k]
-            debut =  datetime.fromtimestamp(int(data['Time'][v_ini])) - timedelta(hours=1, minutes=00)
+            debut =  data['Time'][v_ini]
 
         else:
             v_ini += 1
@@ -506,23 +642,22 @@ def filter_binary_msg(data, condition): # report the times (start and end) when 
 
 
 
-def index_time_limit(L,date_f, stamp = True):
+def index_time_limit(L,date_f, n): # select data only under date_f
     cmt = 0
 
-    if stamp == True:
+    list_t = []
+    list_t_str = []
 
-        for val in L:
-            t = datetime.fromtimestamp(val) - timedelta(hours=1, minutes=00)
+    for k in range(0,len(L),n):
 
-            if t < date_f:
-                cmt += 1
-    else:
-        for val in L:
+        t = datetime.fromtimestamp(int(L[k])) - timedelta(hours=1, minutes=00)
 
-            if val < date_f:
-                cmt += 1
+        if t < date_f:
+            list_t.append(t)
+            list_t_str.append(str(t))
+            cmt += 1
 
-    return cmt
+    return list_t,list_t_str,cmt*n
 
 
 

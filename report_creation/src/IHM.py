@@ -25,9 +25,6 @@ class Report_data(object):
     	self.data_phins = None
 
 
-    
-
-
 def display_binary_msg(Liste, msg):
 
 	L = [msg,'<br>']
@@ -84,7 +81,7 @@ def genrerate_ihm(report_data):
 				a("Mission Report")
 
 			with a.p():
-				a("Drix mission between "+display_date(report_data.date_d)+" and "+ display_date(report_data.date_f))
+				a("Drix mission between "+ display_date(report_data.date_d)+" and "+ display_date(report_data.date_f))
 				a(" ")
 				a(" ")
 

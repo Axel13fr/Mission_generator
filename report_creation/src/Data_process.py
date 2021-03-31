@@ -1,5 +1,5 @@
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 import numpy as np
 from pyproj import Proj
 
@@ -20,17 +20,19 @@ def handle_GPS_data(bag, val_pred =[None,None], dist_min = 0.008): #fct that pro
 
     p = Proj(proj='utm',zone=10,ellps='WGS84')
 
+
     if val_pred[0] == None:
         a = np.array((lat[0], long[0]))
         Lat = [lat[0]]
         Long = [long[0]]
-        list_t = [datetime.fromtimestamp(int(data['Time'][0]))]
-        list_t_str = [str(datetime.fromtimestamp(data['Time'][0]))]
+        list_t = [datetime.fromtimestamp(int(data['Time'][0]))- timedelta(hours=1, minutes=00)]
+        list_t_str = [str(datetime.fromtimestamp(data['Time'][0])- timedelta(hours=1, minutes=00))]
         x,y = p(data['latitude'][0], data['longitude'][0])
         list_x = [x]
         list_y = [y]
         list_niv = [str(data['fix_quality'][0])]
         list_action = [bag.action_name]
+
 
     else:
         a = np.array((val_pred[0],val_pred[1])) # maybe the first point is too closed of the previous mission point
@@ -48,19 +50,22 @@ def handle_GPS_data(bag, val_pred =[None,None], dist_min = 0.008): #fct that pro
         b = np.array((x, y))
         dist = np.linalg.norm(a - b)
 
+        t = datetime.fromtimestamp(int(data['Time'][k]))- timedelta(hours=1, minutes=00)
 
-        if dist > dist_min: # in order to reduce the data number
-            Lat.append(lat[k])
-            Long.append(long[k])
-            list_t_str.append(str(datetime.fromtimestamp(int(data['Time'][k]))))
-            list_t.append(datetime.fromtimestamp(int(data['Time'][k])))
-            list_niv.append(str(data['fix_quality'][k]))
-            list_action.append(bag.action_name)
-            x,y = p(data['latitude'][k], data['longitude'][k])
-            list_x.append(x)
-            list_y.append(y)
+        if t < bag.datetime_date_f : # for the last file, we don't want all the values 
 
-            a = np.array((Lat[-1], Long[-1]))
+            if dist > dist_min: # in order to reduce the data number
+                Lat.append(lat[k])
+                Long.append(long[k])
+                list_t_str.append(str(t))
+                list_t.append(t)
+                list_niv.append(str(data['fix_quality'][k]))
+                list_action.append(bag.action_name)
+                x,y = p(data['latitude'][k], data['longitude'][k])
+                list_x.append(x)
+                list_y.append(y)
+
+                a = np.array((Lat[-1], Long[-1]))
 
     print("Initial data size : ", len(lat),"| size after reduction : ",len(Lat))
 
@@ -194,19 +199,21 @@ def statistics_gps(gps_data):
 
 # = = = = = = = = = = = = = = = =  /drix_status  = = = = = = = = = = = = = = = = = = = = = = = =
 
-
 def handle_drix_status_data(bag): #fct that processes drix_status data
 
     path = bag.csv_path_drix_status
     data = pd.read_csv(path)
     n = 1 # under sampling rate
-    result = pd.DataFrame({'Time': data['Time'][::n],
-        'gasolineLevel_percent': data['gasolineLevel_percent'][::n],
-        'drix_mode': data['drix_mode'][::n],
-        'emergency_mode': data['emergency_mode'][::n],
-        'remoteControlLost' : data['remoteControlLost'][::n],
-        'shutdown_requested' : data['shutdown_requested'][::n],
-        'reboot_requested' : data['reboot_requested'][::n]
+
+    n_end = index_time_limit(data['Time'],bag.datetime_date_f,True)
+
+    result = pd.DataFrame({'Time': data['Time'][:n_end:n],
+        'gasolineLevel_percent': data['gasolineLevel_percent'][:n_end:n],
+        'drix_mode': data['drix_mode'][:n_end:n],
+        'emergency_mode': data['emergency_mode'][:n_end:n],
+        'remoteControlLost' : data['remoteControlLost'][:n_end:n],
+        'shutdown_requested' : data['shutdown_requested'][:n_end:n],
+        'reboot_requested' : data['reboot_requested'][:n_end:n]
         })
 
     return (result)
@@ -231,7 +238,7 @@ def drix_status_data(L_bags): # regroup all the drix_status data
 
 def filter_gasolineLevel(data, minutes_range = 10):
 
-    d = datetime.fromtimestamp(data['Time'][0])
+    d = datetime.fromtimestamp(data['Time'][0]) - timedelta(hours=1, minutes=00)
     list_t = []
     list_t_str = []
     list_t_red = []
@@ -243,7 +250,7 @@ def filter_gasolineLevel(data, minutes_range = 10):
 
     for k in range(len(data['gasolineLevel_percent'])):
 
-        d = datetime.fromtimestamp(data['Time'][k])
+        d = datetime.fromtimestamp(data['Time'][k]) - timedelta(hours=1, minutes=00)
         val = int(d.strftime('%M'))
 
         sum += data['gasolineLevel_percent'][k]
@@ -252,9 +259,9 @@ def filter_gasolineLevel(data, minutes_range = 10):
         if (val%minutes_range == 0) and (d.strftime('%H:%M') != past_val):
             
             list_gaso.append(int(sum/cmpt))
-            list_t_str.append(str(datetime.fromtimestamp(int(data['Time'][k]))))
-            list_t.append(datetime.fromtimestamp(int(data['Time'][k])))
-            list_t_red.append(datetime.fromtimestamp(int(data['Time'][k])).strftime('%H:%M'))
+            list_t_str.append(str(datetime.fromtimestamp(int(data['Time'][k]))- timedelta(hours=1, minutes=00)))
+            list_t.append(datetime.fromtimestamp(int(data['Time'][k]))- timedelta(hours=1, minutes=00))
+            list_t_red.append((datetime.fromtimestamp(int(data['Time'][k]))- timedelta(hours=1, minutes=00)).strftime('%H:%M'))
 
             past_val = d.strftime('%H:%M')
             sum = 0
@@ -274,13 +281,15 @@ def handle_phins_data(bag): #fct that processes drix_status data
 
     n = 3 # under sampling rate
 
-    result = pd.DataFrame({'Time_raw': data['Time'][::n],
-        'headingDeg': data['headingDeg'][::n],
-        'rollDeg': data['rollDeg'][::n],
-        'pitchDeg': data['pitchDeg'][::n],
-        'latitudeDeg' : data['latitudeDeg'][::n],
-        'longitudeDeg' : data['longitudeDeg'][::n],
-        'headingDeg' : data['headingDeg'][::n]
+    n_end = index_time_limit(data['Time'],bag.datetime_date_f,True)
+
+
+    result = pd.DataFrame({'Time_raw': data['Time'][:n_end:n],
+        'headingDeg': data['headingDeg'][:n_end:n],
+        'rollDeg': data['rollDeg'][:n_end:n],
+        'pitchDeg': data['pitchDeg'][:n_end:n],
+        'latitudeDeg' : data['latitudeDeg'][:n_end:n],
+        'longitudeDeg' : data['longitudeDeg'][:n_end:n],
         })
 
     return (result)
@@ -344,7 +353,7 @@ def filter_phins(data,gps_data_diag):
 
     for k in range(len(list_t_raw)):
    
-        time = datetime.fromtimestamp(int(list_t_raw[k]))
+        time = datetime.fromtimestamp(int(list_t_raw[k])) - timedelta(hours=1, minutes=00)
         list_act_phins.append(list_act[cmt_act])
         list_t.append(time)
         list_t_str.append(str(time))
@@ -388,14 +397,16 @@ def filter_phins(data,gps_data_diag):
 
 
 def handle_kongsberg_status_data(bag): #fct that processes kongsberg_2040/kmstatus data
-    print("on est la")
+
     path = bag.csv_path_kongsberg_status
     data = pd.read_csv(path)
-    print(data)
+    # print(data)
     n = 1 # under sampling rate
 
-    result = pd.DataFrame({'Time_raw': data['Time'][::n],
-        'max_depth': data['max_depth'][::n]
+    n_end = index_time_limit(data['Time'],bag.datetime_date_f,True)
+
+    result = pd.DataFrame({'Time_raw': data['Time'][:n_end:n],
+        'max_depth': data['max_depth'][:n_end:n]
         })
 
     return (result)
@@ -419,6 +430,52 @@ def drix_kongsberg_status_data(L_bags): # regroup all kongsberg_2040/kmstatus da
     except:
         return(False)
 
+
+
+# = = = = = = = = = = = = = = = = = =  /diagnostics  = = = = = = = = = = = = = = = = = = =
+
+def handle_diagnostics_data(bag): #fct that processes /diagnostics data
+
+    path = bag.diagnostics_path
+    L = []
+    for p in bag.list_diag_paths:
+
+       data = pd.read_csv(path+'/'+p)
+       L.append((p[:-4],data))
+
+    result = dict(L)
+
+    return (result)
+
+
+
+def drix_diagnostics_data(L_bags): # regroup all /diagnostics data
+
+    L_dic_file = []
+
+    for k in L_bags:
+
+        if k.diagnostics_path != None: # for the case where there is no kongsberg_2040/kmstatus data in that rosbag
+
+            dic_file = handle_diagnostics_data(k) 
+            L_dic_file.append(dic_file)
+    
+    DIC = []
+    for p in L_bags[0].list_diag_paths:
+        l = []
+
+        for dic in L_dic_file:
+            l.append(dic[p[:-4]])
+
+        DIC.append((p[:-4],pd.concat(l, ignore_index=True)))
+
+    diag_data = dict(DIC)
+
+    return(diag_data) # penser à cut les données en trop dans l'affichage
+
+
+
+
 # = = = = = = = = = = = = = = = = = = = = =  Tools  = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 
@@ -432,20 +489,40 @@ def filter_binary_msg(data, condition): # report the times (start and end) when 
         return None
 
     v_ini = l[0]
-    debut = datetime.fromtimestamp(int(data['Time'][l[0]]))
+    debut = datetime.fromtimestamp(int(data['Time'][l[0]])) - timedelta(hours=1, minutes=00)
 
     for k in range(1,len(l)):
         if l[k] != (v_ini + 1):
-            fin = datetime.fromtimestamp(int(data['Time'][l[k-1]]))
+            fin = datetime.fromtimestamp(int(data['Time'][l[k-1]])) - timedelta(hours=1, minutes=00)
 
             list_event.append([debut,fin])
             v_ini = l[k]
-            debut =  datetime.fromtimestamp(int(data['Time'][v_ini]))
+            debut =  datetime.fromtimestamp(int(data['Time'][v_ini])) - timedelta(hours=1, minutes=00)
 
         else:
             v_ini += 1
 
     return(list_event)
+
+
+
+def index_time_limit(L,date_f, stamp = True):
+    cmt = 0
+
+    if stamp == True:
+
+        for val in L:
+            t = datetime.fromtimestamp(val) - timedelta(hours=1, minutes=00)
+
+            if t < date_f:
+                cmt += 1
+    else:
+        for val in L:
+
+            if val < date_f:
+                cmt += 1
+
+    return cmt
 
 
 

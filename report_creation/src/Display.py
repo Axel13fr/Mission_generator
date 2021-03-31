@@ -47,7 +47,6 @@ def plot_gps(df, data_diag, save = False):
 	# fig1.show()
 	# fig2.show()
 	# fig3.show()
-	# fig.show()
 
 	# - - - - - - - - 
 	plt.figure(1)

@@ -5,7 +5,7 @@ Développement d'un outil de génération de rapports de mission basée sur l'an
 
 ### Pour lancer le code
 
-Lancer **Main.py** afin de générer **Mission_report.html** dans le dossier IHM
+Lancer **Data_recovery.py** afin de générer **Mission_report.html** dans le dossier IHM
 
 ```
 python3 Main.py
@@ -13,10 +13,10 @@ python3 Main.py
 
 ### Description du dépôt
 
-**nodeu.py**  
+**mission_report.py**  
 Ce script génère un noeud ROS.
 
-**Main.py**  
+**Data_recovery.py**  
 Ce script récupère les différents dossiers contenant des rosbags suivant des limites de date et y extrait les données dans des fichiers csv.
 Il appelle ensuite des fonctions de Data_process.py et Display.py pour recuillir les données et appelle la fonction d'IHM.py pour générer le rapport de mission.
 

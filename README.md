@@ -8,7 +8,7 @@ Développement d'un outil de génération de rapports de mission basée sur l'an
 Lancer **Data_recovery.py** afin de générer **Mission_report.html** dans le dossier IHM
 
 ```
-python3 Main.py
+python3 Data_recovery.py
 ```
 
 ### Description du dépôt

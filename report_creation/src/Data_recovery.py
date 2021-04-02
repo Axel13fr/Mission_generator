@@ -1,9 +1,7 @@
-import bagpy
 from bagpy import bagreader
 import pandas as pd
 import os
 import operator
-import numpy as np
 from datetime import datetime
 import shutil
 import command 
@@ -11,7 +9,6 @@ import command
 import Data_process as Dp # local import
 import Display as Disp # local import
 import IHM # local import
-
 
 class bagfile(object):
 
@@ -50,7 +47,7 @@ class bagfile(object):
         self.date_N = self.recup_date(l1[0])
 
 
-    def recup_path_bag(self): #fct that collects the rosbag path
+    def recup_path_bag(self): # fct that collects the rosbag path
         files = os.listdir(self.path_file)
         for name in files:
             if (name[-4:] == '.bag'):
@@ -81,16 +78,17 @@ class bagfile(object):
         return(datetime(year, month, days, hours, minutes, seconds))
 
 
-    def rosbag2csv(self): # extract rosbag data and save in a cvs file
+    def rosbag2csv(self): # extracts rosbag data and save in a cvs file
         d = bagreader(self.bag_path,False)
 
-        self.recover_past_report_data() # checks if we already have generated mission report 
+        self.recover_past_report_data() # checks if we already have generated mission report
 
         if self.csv_path_GPS == None:
             try:
                 csv_file1 = d.message_by_topic(topic= '/gps')
                 self.csv_path_GPS = csv_file1
             except:
+                print("No gps data found")
                 pass
 
         if self.csv_path_drix_status == None:
@@ -128,9 +126,6 @@ class bagfile(object):
                 self.csv_path_mothership = csv_file6
             except:
                 pass
-
-
-
 
         self.recover_past_report_diag_data()
 
@@ -290,7 +285,7 @@ if __name__ == '__main__':
 
 
     # - - kongsberg_status - -
-    Drix_kongsberg_status_data = Dp.drix_kongsberg_status_data(L_bags)
+    Drix_kongsberg_status_data = Dp.drix_kongsberg_data(L_bags)
 
 
     # - - diagnostics - -
@@ -358,7 +353,7 @@ if __name__ == '__main__':
 
     # - - - - -
 
-    IHM.genrerate_ihm(report_data)
+    IHM.generate_ihm(report_data)
 
 
 

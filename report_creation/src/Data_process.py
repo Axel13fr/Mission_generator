@@ -90,7 +90,6 @@ def gps_data(L_bags): # fct that regroupes gps values from the rosbag files
 
     for k in L_bags:
         if k.csv_path_GPS != None: # for the case where there is no gps data in that rosbag
-            
             panda_file,a = handle_GPS_data(k,val_pred) 
             val_pred= a
             L_pd_file.append(panda_file)
@@ -409,7 +408,7 @@ def filter_phins(data,gps_data_diag):
 # = = = = = = = = = = = = = = = = = =  /kongsberg_2040/kmstatus  = = = = = = = = = = = = = = = = = = =
 
 
-def handle_kongsberg_status_data(bag): #fct that processes kongsberg_2040/kmstatus data
+def handle_kongsberg_data(bag): #fct that processes kongsberg_2040/kmstatus data
 
     path = bag.csv_path_kongsberg_status
     data = pd.read_csv(path)
@@ -429,7 +428,7 @@ def handle_kongsberg_status_data(bag): #fct that processes kongsberg_2040/kmstat
     return (result)
 
 
-def drix_kongsberg_status_data(L_bags): # regroup all kongsberg_2040/kmstatus data
+def drix_kongsberg_data(L_bags): # regroup all kongsberg_2040/kmstatus data
 
     L_pd_file = []
 
@@ -437,7 +436,7 @@ def drix_kongsberg_status_data(L_bags): # regroup all kongsberg_2040/kmstatus da
 
         if k.csv_path_kongsberg_status != None: # for the case where there is no kongsberg_2040/kmstatus data in that rosbag
 
-            panda_file = handle_kongsberg_status_data(k) 
+            panda_file = handle_kongsberg_data(k) 
             L_pd_file.append(panda_file)
             
     try:
@@ -612,8 +611,8 @@ def add_dist_mothership_drix(GPS_data,mothership_gps_data): # compute the distan
 
     return GPS_data
 
-# = = = = = = = = = = = = = = = = = = = = Tools  = = = = = = = = = = = = = = = = = = = = = = = = = =
 
+# = = = = = = = = = = = = = = = = = = = = Tools  = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 def filter_binary_msg(data, condition): # report the times (start and end) when the condition is fulfilled
 

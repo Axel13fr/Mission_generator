@@ -151,31 +151,13 @@ def plot_global_phins_curve(data, curve, name, save = False):
 
 # = = = = = = = = = = = = = = = = = = /Telemetry2  = = = = = = = = = = = = = = = = = = = = = = = = = 
 
-def plot_telemetry(data, save = True):
-
-	# fig1 = px.scatter(data, x = 'Time_raw', y = 'percent_main_battery')
-	# fig1.show()
+def plot_telemetry(data, save = False):
 
 	fig2 = px.line(data, x = 'Time_raw', y = 'oil_pressure_Bar')
 	fig2.show()
 
-	# fig21 = px.line(data, x = 'Time_raw', y = 'engine_water_temperature_deg')
-	# fig21.show()
-
-	# fig3 = px.scatter(data, x = 'Time_raw', y = 'time_left_main_battery_mins')
-	# fig3.show()
-
-	# fig4 = px.scatter(data, x = 'Time_raw', y = 'main_battery_voltage_V')
-	# fig4.show()
-
 	fig42 = px.scatter(data, x = 'Time_raw', y = 'engine_battery_voltage_V')
 	fig42.show()
-
-	# fig5 = px.scatter(data, x = 'Time_raw', y = 'consumed_current_main_battery_Ah')
-	# fig5.show()
-
-	# fig6 = px.scatter(data, x = 'Time_raw', y = 'current_main_battery_A')
-	# fig6.show()
 
 
 

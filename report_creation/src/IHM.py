@@ -36,7 +36,6 @@ def display_binary_msg(Liste, msg):
 		L.append(str(val[1]))
 		L.append('<br>')
 
-
 	return(' '.join(L))
 
 
@@ -66,7 +65,7 @@ def display_date(date):
 
 
 
-def genrerate_ihm(report_data):
+def generate_ihm(report_data):
 
 	a = Airium()
 

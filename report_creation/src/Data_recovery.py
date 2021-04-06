@@ -311,7 +311,7 @@ if __name__ == '__main__':
 
 
     # - - Drix_status - -
-    Disp.plot_drix_status(data_status_smooth)
+    Disp.plot_drix_status(data_status_smooth, True)
     
     L_emergency_mode = Dp.filter_binary_msg(Drix_status_data,'emergency_mode == True')
     L_rm_ControlLost = Dp.filter_binary_msg(Drix_status_data,'remoteControlLost == True')
@@ -329,7 +329,7 @@ if __name__ == '__main__':
 
 
     # - - Telemetry - -
-    Disp.plot_telemetry(telemetry_data)
+    # Disp.plot_telemetry(telemetry_data)
 
 
 

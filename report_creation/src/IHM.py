@@ -95,6 +95,10 @@ def generate_ihm(report_data):
 				a(" ")
 
 			with a.p():
+				a("<a href = ../IHM/gps/mission_dist.html>Distance of the Drix mission</a>"+'<br>')
+				a(" ")
+
+			with a.p():
 				a("<a href = ../IHM/gps/speed.html>Speed history of the Drix mission</a>"+'<br>')
 				a(" ")
 

@@ -11,7 +11,7 @@ from pyproj import Proj
 # = = = = = = = = = = = = = = = = = =  /gps  = = = = = = = = = = = = = = = = = = = = = = = =
 
 
-def handle_GPS_data(bag, val_pred =[None,None], dist_min = 0.008): #fct that processes gps data
+def handle_gps_data(bag, val_pred =[None,None], dist_min = 0.008): #fct that processes gps data
 
     path = bag.csv_path_GPS
     data = pd.read_csv(path)
@@ -90,7 +90,7 @@ def gps_data(L_bags): # fct that regroupes gps values from the rosbag files
 
     for k in L_bags:
         if k.csv_path_GPS != None: # for the case where there is no gps data in that rosbag
-            panda_file,a = handle_GPS_data(k,val_pred) 
+            panda_file,a = handle_gps_data(k,val_pred) 
             val_pred= a
             L_pd_file.append(panda_file)
 
@@ -520,7 +520,7 @@ def handle_telemetry_data(bag): #fct that processes /Telemetry2 data
     return (result)
 
 
-def drix_telemetry_data(L_bags): # regroup all /Telemetry2 data'time_left_main_battery_mins'
+def drix_telemetry_data(L_bags): # regroups all /Telemetry2 data
 
     L_pd_file = []
 

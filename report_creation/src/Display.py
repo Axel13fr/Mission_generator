@@ -61,9 +61,31 @@ def plot_gps(df, data_diag, save = False):
 	
 	# - - - - - - - -
 
+	if len(data_diag['list_index']) == 1:
+		title4 = 'Mission Distance (Drix in static position)'
+	else:
+		title4 = 'Mission Distance'
+
+	fig4 = px.bar(data_diag, y='list_dist_act', x='list_index',hover_data =['list_vit_act_n','list_vit_act','list_dt_act'], color = 'list_act', title = title4,
+		labels={     "list_vit_act": "Drix speed (m/s)",
+					 "list_vit_act_n": "Drix speed (knot)",
+                     "list_index": "Start of the mission",
+                     "list_act": "Various missions type",
+                     'list_dist_act':'Mission distance (km)',
+                     'list_dt_act':'Mission duration (min)'})
+	fig4.update_layout(xaxis = dict(tickmode = 'array', tickvals = data_diag['list_index'],ticktext = data_diag['list_start_t_str']))
+	fig4.update_traces(textposition='outside')
+	fig4.update_layout(uniformtext_minsize=8, uniformtext_mode='hide')
+
+
+	# - - - - - - - -
+
+
 	# fig1.show()
 	# fig2.show()
 	# fig3.show()
+	# fig4.show()
+
 
 	# - - - - - - - - 
 	plt.figure(1)
@@ -76,6 +98,8 @@ def plot_gps(df, data_diag, save = False):
 		fig1.write_html("../IHM/gps/gps.html")
 		fig2.write_html("../IHM/gps/dist.html")
 		fig3.write_html("../IHM/gps/speed.html")
+		fig4.write_html("../IHM/gps/mission_dist.html")
+
 
 	# plt.show() #/!\ must be after savefig()
 
@@ -114,9 +138,9 @@ def plot_phins_curve(L,name, N_col = 5, save = False):
 
 	Title = []
 	for val in L:
-		Title.append(val[2]+" "+name)
+		Title.append(val[2])
 
-	fig = make_subplots(rows=N_row, cols=N_col, shared_xaxes=False,subplot_titles = Title)	
+	fig = make_subplots(rows=N_row, cols=N_col, shared_xaxes=False,subplot_titles = Title, x_title = name)	
 	l = subplots_col_ligne(n, N_col, N_row)
 
 	for k in range(n):	

@@ -11,6 +11,130 @@ from pyproj import Proj
 # = = = = = = = = = = = = = = = = = =  /gps  = = = = = = = = = = = = = = = = = = = = = = = =
 
 
+def UnderSampleGps(Data, dist_min = 0.008, n = 10): #fct that processes gps data
+    
+    N = len(Data.gps_raw['Time_str'])
+
+    # - - - - - - Add distance data - - - - - -
+
+    list_dist = [0]
+    sum_dist = 0
+
+    for k in range(1,N):
+        a = np.array((Data.gps_raw['list_x'][k-1],Data.gps_raw['list_y'][k-1])) 
+        b = np.array((Data.gps_raw['list_x'][k],Data.gps_raw['list_y'][k]))
+
+        dist = np.linalg.norm(a - b)/1000 # in km
+        sum_dist += abs(dist)
+
+        list_dist.append(np.round(sum_dist*100)/100)
+
+
+    Data.gps_raw = Data.gps_raw.assign(list_dist = list_dist) # distances in km
+
+
+    # - - - - - Under distance sampling - - - - - -
+
+    list_index = [0]
+    a = np.array((Data.gps_raw['list_x'][0],Data.gps_raw['list_y'][0])) 
+    for k in range(N):
+        b = np.array((Data.gps_raw['list_x'][k],Data.gps_raw['list_y'][k]))
+        dist = np.linalg.norm(a - b)/1000 # in km
+
+        if dist > dist_min: # in order to reduce the data number
+            list_index.append(k)
+            a = np.array((Data.gps_raw['list_x'][k],Data.gps_raw['list_y'][k])) 
+
+    Data.gps_UnderSamp_d = Data.gps_raw.iloc[list_index,:].reset_index()
+
+
+
+def MSG_gps(Data):
+
+    if not type(Data.gps_raw) == "<class 'NoneType'>":
+
+        # - - - - - - Gps msg - - - - - -
+        N = len(Data.gps_raw['Time_str'])
+        G_dist = Data.gps_raw["list_dist"][N-1] # in kms
+        Dt = (Data.gps_raw["Time"][N-1] - Data.gps_raw['Time'][0]).total_seconds() # in s
+        G_speed = (G_dist*1000)/Dt # in m/s
+        G_knots = G_speed*1.9438 # in knots/s
+
+        return({"global_dist":G_dist,"global_speed":G_speed,"global_knots":G_knots})
+
+
+
+
+def handle_actions(Data):
+
+    # - = - = - = - gps - = - = - = -
+
+    if not type(Data.gps_raw) == "<class 'NoneType'>":
+
+        # - - - - - - gps_actions - - - - - -
+
+        N = len(Data.gps_raw['Time_str'])
+        L = []
+        list_index_act = [x for x in range(Data.gps_raw['action_type_index'][N-1] + 1)]
+
+        for val in list_index_act:
+            df = Data.gps_raw.loc[Data.gps_raw['action_type_index'] == val]
+            L.append(df.iloc[0])
+            L.append(df.iloc[-1])
+
+        Data.gps_actions = pd.concat(L,sort=False)
+
+
+        # - - - - - - Actions_data - - - - - -
+        
+        N = len(Data.gps_actions["Time_raw"])
+        list_t = []
+        list_d = []
+        list_speed = []
+        list_knot = []
+        list_dt = []
+    
+        for k in range(0,N,2):
+            b = Data.gps_actions["list_dist"][k+1]
+            a = Data.gps_actions["list_dist"][k]
+
+            dist = b-a # in km
+            dt = (Data.gps_actions["Time"][k+1] - Data.gps_actions['Time'][k]).total_seconds() # in s
+            speed = (dist*1000)/dt # in m/s
+            knots = speed*1.9438 # in knots/s
+
+            # print(k//2)
+            # print(Data.gps_actions["action_type"][k+1])
+            # print("dist ",dist,'| dt ',dt,"| speed ",np.round(speed*10)/10)
+            # print('-----------------')
+
+            list_t.append([Data.gps_actions["Time"][k],Data.gps_actions['Time'][k+1]]) # [[t0_start,t0_end], ... ,[ti_start,ti_end]]
+            list_d.append(np.round(dist*100)/100) # in km
+            list_speed.append(speed) # in m/s
+            list_knot.append(knots) # in knots/s
+            list_dt.append(dt) # in s
+
+        Data.Actions_data = pd.DataFrame({"list_t":list_t,"list_d":list_d,"list_speed":list_speed,
+            "list_knot":list_knot,"action_type":Data.gps_actions['action_type'][::2],"list_dt":list_dt})
+
+        
+
+
+def UnderSample(data_pd, n = 2): #fct that processes under sampling
+    if not type(data_pd) == "<class 'NoneType'>":
+        return(data_pd.iloc[::n,:].reset_index())
+    else:
+        return(None)
+
+
+
+
+
+
+
+
+
+
 def handle_gps_data(bag, val_pred =[None,None], dist_min = 0.008): #fct that processes gps data
 
     path = bag.csv_path_GPS
@@ -26,7 +150,7 @@ def handle_gps_data(bag, val_pred =[None,None], dist_min = 0.008): #fct that pro
         Lat = [lat[0]]
         Long = [long[0]]
         list_t = [datetime.fromtimestamp(int(data['Time'][0]))- timedelta(hours=1, minutes=00)]
-        list_t_str = [str(datetime.fromtimestamp(data['Time'][0])- timedelta(hours=1, minutes=00))]
+        list_t_str = [str(datetime.fromtimestamp(int(data['Time'][0]))- timedelta(hours=1, minutes=00))]
         x,y = p(data['latitude'][0], data['longitude'][0])
         list_x = [x]
         list_y = [y]
@@ -98,6 +222,7 @@ def gps_data(L_bags): # fct that regroupes gps values from the rosbag files
     GPS_data,gps_data_diag,L = diagnostics_gps(gps_data)
   
     return(GPS_data,gps_data_diag,L)
+
 
 
 
@@ -224,7 +349,10 @@ def handle_drix_status_data(bag): #fct that processes drix_status data
         'emergency_mode': data['emergency_mode'][:n_end:n],
         'remoteControlLost' : data['remoteControlLost'][:n_end:n],
         'shutdown_requested' : data['shutdown_requested'][:n_end:n],
-        'reboot_requested' : data['reboot_requested'][:n_end:n]
+        'reboot_requested' : data['reboot_requested'][:n_end:n],
+        'thruster_RPM' : data['thruster_RPM'][:n_end:n],
+        'rudderAngle_deg' : data['rudderAngle_deg'][:n_end:n],
+        'drix_clutch' : data['drix_clutch'][:n_end:n]
         })
 
     result = result.assign(Time = list_t)
@@ -250,7 +378,9 @@ def drix_status_data(L_bags): # regroup all the drix_status data
 
 
 
-def filter_gasolineLevel(data, minutes_range = 10):
+def filter_gasolineLevel(Data, minutes_range = 10):
+
+    data = Data.gps_UnderSamp_t
 
     d = data['Time'][0]
     list_t_red = []
@@ -405,46 +535,6 @@ def filter_phins(data,gps_data_diag):
     return(dic,dic_L,sub_data_phins)
 
 
-# = = = = = = = = = = = = = = = = = =  /kongsberg_2040/kmstatus  = = = = = = = = = = = = = = = = = = =
-
-
-def handle_kongsberg_data(bag): #fct that processes kongsberg_2040/kmstatus data
-
-    path = bag.csv_path_kongsberg_status
-    data = pd.read_csv(path)
-    # print(data)
-    n = 1 # under sampling rate
-
-    list_t,list_t_str,n_end = index_time_limit(data['Time'],bag.datetime_date_f,n)
-
-
-    result = pd.DataFrame({'Time_raw': data['Time'][:n_end:n],
-        'max_depth': data['max_depth'][:n_end:n]
-        })
-
-    result = result.assign(Time = list_t)
-    result = result.assign(Time_str = list_t_str)
-
-    return (result)
-
-
-def drix_kongsberg_data(L_bags): # regroup all kongsberg_2040/kmstatus data
-
-    L_pd_file = []
-
-    for k in L_bags:
-
-        if k.csv_path_kongsberg_status != None: # for the case where there is no kongsberg_2040/kmstatus data in that rosbag
-
-            panda_file = handle_kongsberg_data(k) 
-            L_pd_file.append(panda_file)
-            
-    try:
-        kongsberg_status_data = pd.concat(L_pd_file, ignore_index=True)
-        return(kongsberg_status_data)
-
-    except:
-        return(False)
 
 
 
@@ -493,92 +583,10 @@ def drix_diagnostics_data(L_bags): # regroup all /diagnostics data
 
 # = = = = = = = = = = = = = = = = = = /Telemetry2  = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-def handle_telemetry_data(bag): #fct that processes /Telemetry2 data
-
-    path = bag.csv_path_telemetry
-    data = pd.read_csv(path)
-    n = 10 # under sampling rate
-
-    list_t,list_t_str,n_end = index_time_limit(data['Time'],bag.datetime_date_f,n)
-
-    result = pd.DataFrame({'Time_raw': data['Time'][:n_end:n],
-        'oil_pressure_Bar': data['oil_pressure_Bar'][:n_end:n],
-        'engine_water_temperature_deg': data['engine_water_temperature_deg'][:n_end:n],
-        'main_battery_voltage_V': data['main_battery_voltage_V'][:n_end:n],
-        'engine_battery_voltage_V': data['engine_battery_voltage_V'][:n_end:n],
-        'percent_main_battery': data['percent_main_battery'][:n_end:n],
-        'percent_backup_battery': data['percent_backup_battery'][:n_end:n],
-        'consumed_current_main_battery_Ah': data['consumed_current_main_battery_Ah'][:n_end:n],
-        'current_main_battery_A' : data['current_main_battery_A'][:n_end:n],
-        'time_left_main_battery_mins' : data['time_left_main_battery_mins'][:n_end:n],
-        'engine_battery_voltage_V' : data['engine_battery_voltage_V'][:n_end:n]
-        })
-
-    result = result.assign(Time = list_t)
-    result = result.assign(Time_str = list_t_str)
-
-    return (result)
-
-
-def drix_telemetry_data(L_bags): # regroups all /Telemetry2 data
-
-    L_pd_file = []
-
-    for k in L_bags:
-
-        if k.csv_path_telemetry != None: # for the case where there is no /Telemetry2 data in that rosbag
-
-            panda_file = handle_telemetry_data(k) 
-            L_pd_file.append(panda_file)
-            
-    try:
-        telemetry_data = pd.concat(L_pd_file, ignore_index=True)
-        return(telemetry_data)
-
-    except:
-        return(False)
 
 
 
 # = = = = = = = = = = = = = = = = = = /mothership_gps  = = = = = = = = = = = = = = = = = = = = = = = = = =
-
-def handle_mothership_gps_data(bag): #fct that processes /Telemetry2 data
-
-    path = bag.csv_path_mothership
-    data = pd.read_csv(path)
-    n = 1 # under sampling rate
-
-    list_t,list_t_str,n_end = index_time_limit(data['Time'],bag.datetime_date_f,n)
-
-    result = pd.DataFrame({'Time_raw': data['Time'][:n_end:n], 
-        'latitude' : data['latitude'][:n_end:n],
-        'longitude' : data['longitude'][:n_end:n]
-        })
-
-
-    result = result.assign(Time = list_t)
-    result = result.assign(Time_str = list_t_str)
-
-    return (result)
-
-
-def drix_mothership_gps_data(L_bags): # regroup all /Telemetry2 data'time_left_main_battery_mins'
-
-    L_pd_file = []
-
-    for k in L_bags:
-
-        if k.csv_path_mothership != None: # for the case where there is no /Telemetry2 data in that rosbag
-
-            panda_file = handle_mothership_gps_data(k) 
-            L_pd_file.append(panda_file)
-            
-    try:
-        mothership_gps_data = pd.concat(L_pd_file, ignore_index=True)
-        return(mothership_gps_data)
-
-    except:
-        return(False)
 
 
 def add_dist_mothership_drix(GPS_data,mothership_gps_data): # compute the distance btw the drix and the mothership
@@ -632,7 +640,7 @@ def filter_binary_msg(data, condition): # report the times (start and end) when 
 
             list_event.append([debut,fin])
             v_ini = l[k]
-            debut =  data['Time'][v_ini]
+            debut = data['Time'][v_ini]
 
         else:
             v_ini += 1

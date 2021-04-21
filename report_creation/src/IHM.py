@@ -2,27 +2,99 @@ from airium import Airium
 from datetime import datetime
 from datetime import timedelta
 
+import Data_process as Dp # local import
+import Display as Disp # local import
+
 # - - - - - - - - - - - - - - - - - - - 
 # This script handles all IHM creation
 # - - - - - - - - - - - - - - - - - - -
 
 class Report_data(object):
 
-    def __init__(self, date_d, date_f):
+	def __init__(self, date_d, date_f):
 
-    	self.date_d = date_d
-    	self.date_f = date_f
+		self.date_d = date_d
+		self.date_f = date_f
 
-    	self.avg_speed = None
-    	self.avg_speed_n = None
-    	self.dist = None
+		# - - - Messages - - -
+		self.gps_msg = None
 
-    	self.L_emergency_mode = None
-    	self.L_rm_ControlLost = None
-    	self.L_shutdown_req = None
-    	self.L_reboot_req = None
+		# - - - List of binary msg - - -
+		self.L_drix_status_binary_msg = {} # list msg
+		self.L_drix_status_bn_dflt_msg = {} # default msg
+		self.L_drix_status_bn_error_msg = {} # error msg
 
-    	self.data_phins = None
+		self.L_emergency_mode = None
+		self.L_rm_ControlLost = None
+		self.L_shutdown_req = None
+		self.L_reboot_req = None
+
+		# - - - Display - - -
+		self.gps_fig = None
+
+		self.drix_status_gaso_fig = None
+		self.drix_status_gaso_data = None
+
+		self.data_phins = None
+
+
+	def collect_drix_status_binary_msg(self,Data):
+
+		L_emergency_mode = Dp.filter_binary_msg(Data.drix_status_UnderSamp_t,'emergency_mode == True')
+		L_rm_ControlLost = Dp.filter_binary_msg(Data.drix_status_UnderSamp_t,'remoteControlLost == True')
+		L_shutdown_req = Dp.filter_binary_msg(Data.drix_status_UnderSamp_t,'shutdown_requested == True')
+		L_reboot_req = Dp.filter_binary_msg(Data.drix_status_UnderSamp_t,'reboot_requested == True')
+		L_drix_mode = Dp.filter_binary_msg(Data.drix_status_UnderSamp_t,'drix_mode == AUTO')
+		L_drix_clutch = Dp.filter_binary_msg(Data.drix_status_UnderSamp_t,'drix_clutch == FORWARD')
+
+		dic = {"L_emergency_mode":L_emergency_mode,"L_rm_ControlLost":L_rm_ControlLost,"L_shutdown_req":L_shutdown_req,"L_reboot_req":L_reboot_req,"L_drix_mode":L_drix_mode,"L_drix_clutch":L_drix_clutch}
+
+		self.L_drix_status_binary_msg = sorted(dic.items(), key=lambda t: t[1])
+
+		dic_Good = {"L_emergency_mode":'Emergency mode never activated',
+		"L_rm_ControlLost":'Remote Control never lost',
+		"L_shutdown_req":'No shutdown requested during the mission',
+		"L_reboot_req":'No reboot requested during the mission',
+		"L_drix_mode":"Drix mode always in AUTO",
+		"L_drix_clutch":"Drix clutch always in FORWARD"}
+
+		dic_Not_Good = {"L_emergency_mode":'Emergency mode activated :',
+		"L_rm_ControlLost":'Remote Control lost :',
+		"L_shutdown_req":'Shutdown requested :',
+		"L_reboot_req":'Reboot requested :',
+		"L_drix_mode":"Drix mode not in AUTO :",
+		"L_drix_clutch":"Drix clutch not in FORWARD :"}
+
+		self.L_drix_status_bn_dflt_msg = dic_Good
+		self.L_drix_status_bn_error_msg = dic_Not_Good
+
+
+
+
+def filter_binary_msg(data, condition): # report the times (start and end) when the condition is fulfilled
+
+    list_event = []
+    l = data.query(condition).index.tolist()
+
+    if not(l):
+        # print('Nothing found for ',condition)
+        return None
+
+    v_ini = l[0]
+    debut = data['Time'][l[0]]
+
+    for k in range(1,len(l)):
+        if l[k] != (v_ini + 1):
+            fin = data['Time'][l[k-1]]
+
+            list_event.append([debut,fin])
+            v_ini = l[k]
+            debut = data['Time'][v_ini]
+
+        else:
+            v_ini += 1
+
+    return(list_event)
 
 
 def display_binary_msg(Liste, msg):
@@ -115,34 +187,47 @@ def generate_ihm(report_data):
 				a(" ")
 				a("<a href = ../IHM/status/drix_status_gasoline.html>\"<img src=\"../IHM/data/drix_status_gasoline.png\" alt=\"Fuel\" /></a>")
 				a(" ")
+				a("<a href = ../IHM/status/drix_status_curves.html>Curves</a>" + " from drix_status" +'<br>')
+				a(" ")
 				
 			with a.p():
-				msg = 'Remote Control never lost'
-				if (report_data.L_rm_ControlLost != None):
-					msg = display_binary_msg(report_data.L_rm_ControlLost, "Remote control lost == True :")
-				a(msg)
-				a(" ")
+				for key, value in report_data.L_drix_status_binary_msg.iteritems():
+					if value: # errors found case 
+						msg = display_binary_msg(value,report_data.L_drix_status_bn_error_msg[key])
 
-			with a.p():
-				msg = 'Emergency mode never activated'
-				if (report_data.L_emergency_mode != None):
-					msg = display_binary_msg(report_data.L_emergency_mode, "Emergency mode == True :")
-				a(msg)
-				a(" ")
+					else: # All clear case
+						msg = report_data.L_drix_status_bn_dflt_msg[key]
 
-			with a.p():
-				msg = 'No shutdown requested during the mission'
-				if (report_data.L_shutdown_req != None):
-					msg = display_binary_msg(report_data.L_shutdown_req, "Shutdown requested :")
-				a(msg)
-				a(" ")
+					a(msg)
+					a(" ")
 
-			with a.p():
-				msg = 'No reboot requested during the mission'
-				if (report_data.L_reboot_req != None):
-					msg = display_binary_msg(report_data.L_reboot_req, "Reboot requested :")
-				a(msg)
-				a(" ")
+			# 	msg = 'Remote Control never lost'
+			# 	if (report_data.L_rm_ControlLost != None):
+			# 		msg = display_binary_msg(report_data.L_rm_ControlLost, "Remote control lost == True :")
+			# 	a(msg)
+			# 	a(" ")
+
+			# with a.p():
+			# 	msg = 'Emergency mode never activated'
+			# 	if (report_data.L_emergency_mode != None):
+			# 		msg = display_binary_msg(report_data.L_emergency_mode, "Emergency mode == True :")
+			# 	a(msg)
+			# 	a(" ")
+
+			# with a.p():
+			# 	msg = 'No shutdown requested during the mission'
+			# 	if (report_data.L_shutdown_req != None):
+			# 		msg = display_binary_msg(report_data.L_shutdown_req, "Shutdown requested :")
+			# 	a(msg)
+			# 	a(" ")
+
+			# with a.p():
+			# 	msg = 'No reboot requested during the mission'
+			# 	if (report_data.L_reboot_req != None):
+			# 		msg = display_binary_msg(report_data.L_reboot_req, "Reboot requested :")
+			# 	a(msg)
+			# 	a(" ")
+
 
 
 			with a.p():

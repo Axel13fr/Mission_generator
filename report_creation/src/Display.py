@@ -1,129 +1,229 @@
 import plotly.express as px
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt, mpld3
 from plotly.subplots import make_subplots
+from sklearn import preprocessing
+from mpld3 import plugins
+from mpld3 import utils
+# import collections
+from mpld3.utils import get_id
+import collections.abc
+
+import Data_process as Dp # local import
+
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - 
 # This script handles all the data graph function
 # - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
+# Define some CSS to control our custom labels
+css = """
+table
+{
+  border-collapse: collapse;
+}
+th
+{
+  color: #ffffff;
+  background-color: #000000;
+}
+td
+{
+  background-color: #cccccc;
+}
+table, th, td
+{
+  font-family:Arial, Helvetica, sans-serif;
+  border: 1px solid black;
+  text-align: right;
+}
+"""
+
+
 
 # = = = = = = = = = = = = = = = = = =  /gps  = = = = = = = = = = = = = = = = = = = = = = = =
 
-def plot_gps(df, data_diag, save = False):
+def plot_gps(report_data, Data):
 
-	try: # for the case where we have processed the mothership_gps data
-		test = df['dist_drix_mothership'][0]
-		list_hover_data =['Time_str','action_type','dist_drix_mothership','list_v_str','list_dist_str']
+	df = Data.gps_UnderSamp_d
 
-	except:
-		list_hover_data =['Time_str','action_type','list_v_str','list_dist_str']		
-
-	title1 = "Gnss positions"
-	fig1 = px.scatter(df, x='longitude_deg', y='latitude_deg', 
-		hover_data = list_hover_data, 
-		color = 'fix_quality', title = title1 ,labels={
-                     "longitude_deg": "Longitude (deg)",
-                     "latitude_deg": "Latitude (deg)",
-                     "fix_quality": "GPS quality",
-                     "action_type" : "action type",
-                     "dist_drix_mothership" : "Dist Drix/ship",
-                     'list_v_str':'speed ',
-                     'list_dist_str' : 'Travelled distance'})
-	fig1.update_yaxes(scaleanchor = "x",scaleratio = 1)
-
-	# - - - - - - - - 
-	
-	if len(data_diag['list_index']) == 1:
-		title2 = 'Distance evolution (Drix in static position)'
-	else:
-		title2 = 'Distance evolution'
-	fig2 = px.line(df, x="Time", y="list_dist", title= title2, labels={"list_dist": "Travelled distance (km)"})
-	fig2.update_layout(hovermode="y")
-
-	# - - - - - - - - 
-
-	if len(data_diag['list_index']) == 1:
-		title3 = 'Speed history (Drix in static position)'
-	else:
-		title3 = 'Speed history'
-	fig3 = px.bar(data_diag, y='list_vit_act', x='list_index',text = 'list_vit_act',hover_data =['list_vit_act_n','list_dist_act','list_dt_act'], color = 'list_act', title = title3, 
-		labels={     "list_vit_act": "Drix speed (m/s)",
-					 "list_vit_act_n": "Drix speed (knot)",
-                     "list_index": "Start of the mission",
-                     "list_act": "Various missions type",
-                     'list_dist_act':'Mission distance (km)',
-                     'list_dt_act':'Mission duration (min)'})
-	fig3.update_layout(xaxis = dict(tickmode = 'array', tickvals = data_diag['list_index'],ticktext = data_diag['list_start_t_str']))
-	fig3.update_traces(textposition='outside')
-	fig3.update_layout(uniformtext_minsize=8, uniformtext_mode='hide')
-	
-	# - - - - - - - -
-
-	if len(data_diag['list_index']) == 1:
-		title4 = 'Mission Distance (Drix in static position)'
-	else:
-		title4 = 'Mission Distance'
-
-	fig4 = px.bar(data_diag, y='list_dist_act', x='list_index',hover_data =['list_vit_act_n','list_vit_act','list_dt_act'], color = 'list_act', title = title4,
-		labels={     "list_vit_act": "Drix speed (m/s)",
-					 "list_vit_act_n": "Drix speed (knot)",
-                     "list_index": "Start of the mission",
-                     "list_act": "Various missions type",
-                     'list_dist_act':'Mission distance (km)',
-                     'list_dt_act':'Mission duration (min)'})
-	fig4.update_layout(xaxis = dict(tickmode = 'array', tickvals = data_diag['list_index'],ticktext = data_diag['list_start_t_str']))
-	fig4.update_traces(textposition='outside')
-	fig4.update_layout(uniformtext_minsize=8, uniformtext_mode='hide')
+	fig, ax = plt.subplots()
+	ax.grid(True, alpha=0.3)
 
 
-	# - - - - - - - -
+	color10_16 = {'IdleBoot' : 'blue','Idle' : 'cyan','goto' : 'magenta','follow_me' : "#636efa",'box-in': "#00cc96","path_following" : "#EF553B","truc": 'brown'}
+	L_act = ['goto','IdleBoot','Idle','follow_me','box-in',"path_following"]
 
+	nr_elements = len(L_act)
+	elements = []
+	l = []
 
-	# fig1.show()
-	# fig2.show()
-	# fig3.show()
-	# fig4.show()
+	for i in range(nr_elements):
+		res = df[df['action_type'] == L_act[i]]
+		element = ax.scatter(res['longitude'],res['latitude'], c = color10_16[L_act[i]], s = 0.5, alpha=0.8)
+		elements.append([element])
 
+	# - - - - - -
 
-	# - - - - - - - - 
-	plt.figure(1)
-	plt.plot(df['longitude_deg'], df['latitude_deg'])
+	label_names = df['action_type']
+	label_names_unique = label_names.unique()
+	le = preprocessing.LabelEncoder()
+	le.fit(label_names_unique)
+	label_indices = le.transform(label_names)
+
+	points2 = ax.scatter(df['longitude'],df['latitude'], c = label_indices, s = 2, alpha = 0.)
+
+	# - - -
+
+	hover_data = pd.DataFrame({'Time' : df['Time_str'],
+		'Travelled distance' :df['list_dist']
+        })
+
+	labels = []
+	for i in range(len(df['Time_str'])):
+	    label = hover_data.iloc[[i], :].T
+	    label.columns = ['Row {0}'.format(i)]
+	    labels.append(str(label.to_html()))
+
+	tooltip = plugins.PointHTMLTooltip(points2, labels,voffset=10, hoffset=10, css=css)
+
+	# - - - - - -
+
+	plugins.connect(fig, tooltip, plugins.InteractiveLegendPlugin(elements, L_act))
+
 	plt.axis('equal')
-	plt.title("Gnss positions")
+	plt.title('Gnss positions')
+	fig.set_figheight(8)
+	fig.set_figwidth(14)
 
-	if save == True:
-		plt.savefig("../IHM/data/gps.png")
-		fig1.write_html("../IHM/gps/gps.html")
-		fig2.write_html("../IHM/gps/dist.html")
-		fig3.write_html("../IHM/gps/speed.html")
-		fig4.write_html("../IHM/gps/mission_dist.html")
+	report_data.gps_fig = fig
+
+	mpld3.save_html(fig,"../IHM/gps/gps.html")
+	# mpld3.show()
+
+	# - - - - - Distance travelled graph - - - - - -
+
+	df2 = Data.gps_UnderSamp_t
+	print("taille ",len(df2["Time"]))
+
+	fig1, ax1 = plt.subplots()
+	labels_d = []
+	for i in range(len(df2['Time_str'])):
+	    labels_d.append("Time : "+str(df2['Time_str'][i])+" | Travelled distance : "+str(df2['list_dist'][i]))
+
+	t = xlabel_list(df2['Time_str'],df2['list_dist'])
+
+	y = df2['list_dist'].values.tolist()
 
 
-	# plt.show() #/!\ must be after savefig()
+	for i in range(nr_elements):
+		res = df2[df2['action_type'] == L_act[i]]
+		x = [t[k] for k in res.index]
+		points = ax1.scatter(x,res['list_dist'],c = color10_16[L_act[i]],label = L_act[i], s = 0.4, alpha = 1)
+
+	
+	ax1.legend()
+
+	points2 = ax1.scatter(t,y, s = 1, alpha = 0.4)
+	tooltip1 = plugins.PointHTMLTooltip(points2, labels_d,voffset=10, hoffset=10)
+	plugins.connect(fig1, tooltip1)
+
+	plt.title('Distance evolution')
+	fig1.set_figheight(8)
+	fig1.set_figwidth(14)
+
+	mpld3.show()
+	# mpld3.save_html(fig1,"../IHM/gps/distnew.html")
+
+	# # - - - - - - - - 
+	
+	# if len(data_diag['list_index']) == 1:
+	# 	title2 = 'Distance evolution (Drix in static position)'
+	# else:
+	# 	title2 = 'Distance evolution'
+	# fig2 = px.line(df, x="Time", y="list_dist", title= title2, labels={"list_dist": "Travelled distance (km)"})
+	# fig2.update_layout(hovermode="y")
+
+	# # - - - - - - - - 
+
+	# if len(data_diag['list_index']) == 1:
+	# 	title3 = 'Speed history (Drix in static position)'
+	# else:
+	# 	title3 = 'Speed history'
+	# fig3 = px.bar(data_diag, y='list_vit_act', x='list_index',text = 'list_vit_act',hover_data =['list_vit_act_n','list_dist_act','list_dt_act'], color = 'list_act', title = title3, 
+	# 	labels={     "list_vit_act": "Drix speed (m/s)",
+	# 				 "list_vit_act_n": "Drix speed (knot)",
+ #                     "list_index": "Start of the mission",
+ #                     "list_act": "Various missions type",
+ #                     'list_dist_act':'Mission distance (km)',
+ #                     'list_dt_act':'Mission duration (min)'})
+	# fig3.update_layout(xaxis = dict(tickmode = 'array', tickvals = data_diag['list_index'],ticktext = data_diag['list_start_t_str']))
+	# fig3.update_traces(textposition='outside')
+	# fig3.update_layout(uniformtext_minsize=8, uniformtext_mode='hide')
+	
+	# # - - - - - - - -
+
+	# if len(data_diag['list_index']) == 1:
+	# 	title4 = 'Mission Distance (Drix in static position)'
+	# else:
+	# 	title4 = 'Mission Distance'
+
+	# fig4 = px.bar(data_diag, y='list_dist_act', x='list_index',hover_data =['list_vit_act_n','list_vit_act','list_dt_act'], color = 'list_act', title = title4,
+	# 	labels={     "list_vit_act": "Drix speed (m/s)",
+	# 				 "list_vit_act_n": "Drix speed (knot)",
+ #                     "list_index": "Start of the mission",
+ #                     "list_act": "Various missions type",
+ #                     'list_dist_act':'Mission distance (km)',
+ #                     'list_dt_act':'Mission duration (min)'})
+	# fig4.update_layout(xaxis = dict(tickmode = 'array', tickvals = data_diag['list_index'],ticktext = data_diag['list_start_t_str']))
+	# fig4.update_traces(textposition='outside')
+	# fig4.update_layout(uniformtext_minsize=8, uniformtext_mode='hide')
+
+
+	# # - - - - - - - -
+
+
+	# # fig1.show()
+	# # fig2.show()
+	# # fig3.show()
+	# # fig4.show()
+
+	# # - - - - - - - - 
+	# plt.figure(1)
+	# plt.plot(df['longitude_deg'], df['latitude_deg'])
+	# plt.axis('equal')
+	# plt.title("Gnss positions")
+
+	# # if save == True:
+	# 	# plt.savefig("../IHM/data/gps.png")
+	# 	# # fig1.write_html("../IHM/gps/gps.html")
+	# 	# fig2.write_html("../IHM/gps/dist.html")
+	# 	# fig3.write_html("../IHM/gps/speed.html")
+	# 	# fig4.write_html("../IHM/gps/mission_dist.html")
+
+
+	# # plt.show() #/!\ must be after savefig()
 
 
 
 # = = = = = = = = = = = = = = = =  /drix_status  = = = = = = = = = = = = = = = = = = = = = = = =
 
-def plot_drix_status(data,save = False):
+def plot_drix_status(report_data, Data):
 
-	fig = px.line(data, x='Time_str', y='gasolineLevel_percent_filtered', title = "Gasoline Level",
-		labels={"Time_str": "Time",
-				"gasolineLevel_percent_filtered": "Gasoline Level (%)"})
-	fig.update_layout(yaxis_range=[0,100])
+	df = Dp.filter_gasolineLevel(Data)
 
-	plt.figure(2)
-	plt.plot(data['Time_str'], data['gasolineLevel_percent_filtered'])
+	fig, ax = plt.subplots()
+	plt.plot(df['Time_str'], df['gasolineLevel_percent_filtered'])
 	plt.xticks(rotation=45, ha="right")
 	plt.title("Gasoline Level")
 
-	if save == True:
-		plt.savefig("../IHM/data/drix_status_gasoline.png")
-		fig.write_html("../IHM/status/drix_status_gasoline.html")
-	# fig.show()
-	# plt.show()
+	report_data.drix_status_gaso_fig = fig
+	report_data.drix_status_gaso_data = df
+
+
+	# mpld3.save_html(fig,"drix_status_gasoline.html")
+	# mpld3.show()
 
 
 
@@ -200,6 +300,36 @@ def subplots_col_ligne(n_data,n_col,n_row):
 		col = k%n_col + 1
 		l.append([row,col])
 	return(l)
+
+
+def xlabel_list(Lx,Ly, c = 10): # c is the labels number   
+
+	pas = round(len(Lx)/c)
+	reste = (len(Lx) - 1)%pas 
+
+	lili = Ly[::pas].values.tolist()
+	lala = Lx[::pas].values.tolist()
+
+	x = pd.Series(lili, index = lala)
+	x.plot(alpha=0.)
+	plt.xticks(range(len(x)), x.index) 
+
+	a = 0
+	b = len(lili) - 1 + reste*(1/pas)
+	c = len(Lx)
+
+	t = np.linspace(a,b,c)
+
+	return(t)
+
+
+# fig = make_subplots(rows= , cols= , shared_xaxes=False,subplot_titles = Title)	
+
+# fig1 = px.line(data, x = , y = ,title = , labels={ "x": "Date", "y": " "})	
+# fig.add_trace(fig1["data"][0], row= , col= )
+
+# fig1 = px.line(data, x = , y = ,title = , labels={ "x": "Date", "y": " "})	
+# fig.add_trace(fig1["data"][0], row= , col= )
 
 
 

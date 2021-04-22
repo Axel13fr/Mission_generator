@@ -11,6 +11,8 @@ from mpld3.utils import get_id
 import collections.abc
 
 import Data_process as Dp # local import
+import IHM as ihm# local import
+
 
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -48,8 +50,8 @@ def plot_gps(report_data, Data):
 
 	df = Data.gps_UnderSamp_d
 
-	fig, ax = plt.subplots()
-	ax.grid(True, alpha=0.3)
+	fig1, ax1 = plt.subplots()
+	ax1.grid(True, alpha=0.3)
 
 
 	color10_16 = {'IdleBoot' : 'blue','Idle' : 'cyan','goto' : 'magenta','follow_me' : "#636efa",'box-in': "#00cc96","path_following" : "#EF553B","truc": 'brown'}
@@ -61,7 +63,7 @@ def plot_gps(report_data, Data):
 
 	for i in range(nr_elements):
 		res = df[df['action_type'] == L_act[i]]
-		element = ax.scatter(res['longitude'],res['latitude'], c = color10_16[L_act[i]], s = 0.5, alpha=0.8)
+		element = ax1.scatter(res['longitude'],res['latitude'], c = color10_16[L_act[i]], s = 0.5, alpha=0.8)
 		elements.append([element])
 
 	# - - - - - -
@@ -72,7 +74,7 @@ def plot_gps(report_data, Data):
 	le.fit(label_names_unique)
 	label_indices = le.transform(label_names)
 
-	points2 = ax.scatter(df['longitude'],df['latitude'], c = label_indices, s = 2, alpha = 0.)
+	points2 = ax1.scatter(df['longitude'],df['latitude'], c = label_indices, s = 2, alpha = 0.)
 
 	# - - -
 
@@ -90,29 +92,29 @@ def plot_gps(report_data, Data):
 
 	# - - - - - -
 
-	plugins.connect(fig, tooltip, plugins.InteractiveLegendPlugin(elements, L_act))
+	plugins.connect(fig1, tooltip, plugins.InteractiveLegendPlugin(elements, L_act))
 
 	plt.axis('equal')
 	plt.title('Gnss positions')
-	fig.set_figheight(8)
-	fig.set_figwidth(14)
+	fig1.set_figheight(8)
+	fig1.set_figwidth(14)
 
-	report_data.gps_fig = fig
+	report_data.gps_fig = fig1
 
-	mpld3.save_html(fig,"../IHM/gps/gps.html")
+	mpld3.save_html(fig1,"../IHM/gps/gps.html")
 	# mpld3.show()
+
 
 	# - - - - - Distance travelled graph - - - - - -
 
 	df2 = Data.gps_UnderSamp_t
-	print("taille ",len(df2["Time"]))
 
-	fig1, ax1 = plt.subplots()
+	fig2, ax2 = plt.subplots()
 	labels_d = []
 	for i in range(len(df2['Time_str'])):
 	    labels_d.append("Time : "+str(df2['Time_str'][i])+" | Travelled distance : "+str(df2['list_dist'][i]))
 
-	t = xlabel_list(df2['Time_str'],df2['list_dist'])
+	t = xlabel_list(df2['Time_str'])
 
 	y = df2['list_dist'].values.tolist()
 
@@ -120,90 +122,99 @@ def plot_gps(report_data, Data):
 	for i in range(nr_elements):
 		res = df2[df2['action_type'] == L_act[i]]
 		x = [t[k] for k in res.index]
-		points = ax1.scatter(x,res['list_dist'],c = color10_16[L_act[i]],label = L_act[i], s = 0.4, alpha = 1)
+		points = ax2.scatter(x,res['list_dist'],c = color10_16[L_act[i]],label = L_act[i], s = 0.4, alpha = 1)
 
-	
-	ax1.legend()
 
-	points2 = ax1.scatter(t,y, s = 1, alpha = 0.4)
+	ax2.legend(markerscale=8., scatterpoints=1, fontsize=10)
+
+	points2 = ax2.scatter(t,y, s = 1, alpha = 0.4)
 	tooltip1 = plugins.PointHTMLTooltip(points2, labels_d,voffset=10, hoffset=10)
-	plugins.connect(fig1, tooltip1)
+	plugins.connect(fig2, tooltip1)
 
 	plt.title('Distance evolution')
-	fig1.set_figheight(8)
-	fig1.set_figwidth(14)
+	fig2.set_figheight(8)
+	fig2.set_figwidth(14)
 
-	mpld3.show()
-	# mpld3.save_html(fig1,"../IHM/gps/distnew.html")
+	report_data.dist_fig = fig2
 
-	# # - - - - - - - - 
+	# mpld3.show()
+	mpld3.save_html(fig2,"../IHM/gps/dist.html")
+
+
 	
-	# if len(data_diag['list_index']) == 1:
-	# 	title2 = 'Distance evolution (Drix in static position)'
-	# else:
-	# 	title2 = 'Distance evolution'
-	# fig2 = px.line(df, x="Time", y="list_dist", title= title2, labels={"list_dist": "Travelled distance (km)"})
-	# fig2.update_layout(hovermode="y")
+	# - - - - - Speed Bar chart - - - - - -
 
-	# # - - - - - - - - 
+	df3 = Data.Actions_data
 
-	# if len(data_diag['list_index']) == 1:
-	# 	title3 = 'Speed history (Drix in static position)'
-	# else:
-	# 	title3 = 'Speed history'
-	# fig3 = px.bar(data_diag, y='list_vit_act', x='list_index',text = 'list_vit_act',hover_data =['list_vit_act_n','list_dist_act','list_dt_act'], color = 'list_act', title = title3, 
-	# 	labels={     "list_vit_act": "Drix speed (m/s)",
-	# 				 "list_vit_act_n": "Drix speed (knot)",
- #                     "list_index": "Start of the mission",
- #                     "list_act": "Various missions type",
- #                     'list_dist_act':'Mission distance (km)',
- #                     'list_dt_act':'Mission duration (min)'})
-	# fig3.update_layout(xaxis = dict(tickmode = 'array', tickvals = data_diag['list_index'],ticktext = data_diag['list_start_t_str']))
-	# fig3.update_traces(textposition='outside')
-	# fig3.update_layout(uniformtext_minsize=8, uniformtext_mode='hide')
+	list_index = []
+	list_speed = []
+	list_dist = []
+	colour = []
+	labels = []
+
+	for k in range(len(df3['list_dt'])):
+
+		if (df3['action_type'][k] != 'Idle' and df3['action_type'][k] != 'IdleBoot'):
+			
+			list_speed.append(df3["list_speed"][k])
+			colour.append(color10_16[df3["action_type"][k]])
+			list_index.append(k)
+			labels.append(str(df3["list_t"][k][0].strftime('%H:%M')))
+			list_dist.append(df3["list_d"][k])
+
+	borne_sup = int(np.max(list_speed)) + 2
+
+
+	fig3, ax23 = plt.subplots()
+	ax23.set_ylim(0, borne_sup*1.9438)
+	ax23.set_ylabel('Knots')
+	ax3 = ax23.twinx()	# mpld3.save_html(fig3,"../IHM/gps/speed.html")
+
 	
-	# # - - - - - - - -
 
-	# if len(data_diag['list_index']) == 1:
-	# 	title4 = 'Mission Distance (Drix in static position)'
-	# else:
-	# 	title4 = 'Mission Distance'
+	x = np.arange(len(list_speed))  # the label locations
+	width = 0.5  # the width of the bars
 
-	# fig4 = px.bar(data_diag, y='list_dist_act', x='list_index',hover_data =['list_vit_act_n','list_vit_act','list_dt_act'], color = 'list_act', title = title4,
-	# 	labels={     "list_vit_act": "Drix speed (m/s)",
-	# 				 "list_vit_act_n": "Drix speed (knot)",
- #                     "list_index": "Start of the mission",
- #                     "list_act": "Various missions type",
- #                     'list_dist_act':'Mission distance (km)',
- #                     'list_dt_act':'Mission duration (min)'})
-	# fig4.update_layout(xaxis = dict(tickmode = 'array', tickvals = data_diag['list_index'],ticktext = data_diag['list_start_t_str']))
-	# fig4.update_traces(textposition='outside')
-	# fig4.update_layout(uniformtext_minsize=8, uniformtext_mode='hide')
+	rects1 = ax3.bar(x, list_speed, width,color=colour)
 
+	dx = pd.Series(np.zeros(len(labels)), index = labels)
+	dx.plot(alpha=0.)
+	plt.xticks(range(len(dx)), dx.index) 
 
-	# # - - - - - - - -
+	ax3.set_ylim(0, borne_sup)
+	ax3.set_ylabel('m/s')
 
+	plt.title('Speed history')
+	fig3.set_figheight(8)
+	fig3.set_figwidth(18)
 
-	# # fig1.show()
-	# # fig2.show()
-	# # fig3.show()
-	# # fig4.show()
-
-	# # - - - - - - - - 
-	# plt.figure(1)
-	# plt.plot(df['longitude_deg'], df['latitude_deg'])
-	# plt.axis('equal')
-	# plt.title("Gnss positions")
-
-	# # if save == True:
-	# 	# plt.savefig("../IHM/data/gps.png")
-	# 	# # fig1.write_html("../IHM/gps/gps.html")
-	# 	# fig2.write_html("../IHM/gps/dist.html")
-	# 	# fig3.write_html("../IHM/gps/speed.html")
-	# 	# fig4.write_html("../IHM/gps/mission_dist.html")
+	report_data.speed_fig = fig3
+	
+	# mpld3.show()
+	mpld3.save_html(fig3,"../IHM/gps/speed.html")
 
 
-	# # plt.show() #/!\ must be after savefig()
+
+	# - - - - - Distance Bar chart - - - - - -
+
+	fig4, ax4 = plt.subplots()
+	rects1 = ax4.bar(x, list_dist, width,color=colour)
+
+	x = pd.Series(np.zeros(len(labels)), index = labels)
+	x.plot(alpha=0.)
+	plt.xticks(range(len(x)), x.index)
+
+	ax4.set_ylabel('km')
+	plt.title('Mission Distance')
+	fig4.set_figheight(8)
+	fig4.set_figwidth(18)
+	
+
+	report_data.mission_dist_fig = fig4
+
+	# mpld3.show()
+	mpld3.save_html(fig4,"../IHM/gps/mission_dist.html")
+
 
 
 
@@ -275,18 +286,152 @@ def plot_global_phins_curve(data, curve, name, save = False):
 
 # = = = = = = = = = = = = = = = = = = /Telemetry2  = = = = = = = = = = = = = = = = = = = = = = = = = 
 
-def plot_telemetry(data, save = False):
+def plot_telemetry(report_data, Data):
 
-	fig2 = px.line(data, x = 'Time_raw', y = 'oil_pressure_Bar')
-	fig2.show()
+	fig1 = plot_binary_msg(Data.telemetry_raw['is_drix_started'], Data.telemetry_raw['Time'],'Drix is started')
+	fig2 = plot_binary_msg(Data.telemetry_raw['is_navigation_lights_on'], Data.telemetry_raw['Time'],'Navigation lights')
+	fig3 = plot_binary_msg(Data.telemetry_raw['is_foghorn_on'], Data.telemetry_raw['Time'],'Foghorn')
+	fig4 = plot_binary_msg(Data.telemetry_raw['is_fans_on'], Data.telemetry_raw['Time'],'Fans')
+	fig5 = plot_binary_msg(Data.telemetry_raw['is_water_temperature_alarm_on'], Data.telemetry_raw['Time'],'Water temperature alarm')
+	fig6 = plot_binary_msg(Data.telemetry_raw['is_oil_pressure_alarm_on'], Data.telemetry_raw['Time'],'Oil pressure alarm')
+	fig7 = plot_binary_msg(Data.telemetry_raw['is_water_in_fuel_on'], Data.telemetry_raw['Time'],'Water in fuel')
+	fig8 = plot_binary_msg(Data.telemetry_raw['electronics_water_ingress'], Data.telemetry_raw['Time'],'Electronics water ingress')
+	fig9 = plot_binary_msg(Data.telemetry_raw['electronics_fire_on_board'], Data.telemetry_raw['Time'],'Electronics fire on board')
+	fig10 = plot_binary_msg(Data.telemetry_raw['engine_water_ingress'], Data.telemetry_raw['Time'],'Engine Water Ingress')
+	fig11 = plot_binary_msg(Data.telemetry_raw['engine_fire_on_board'], Data.telemetry_raw['Time'],'Engine fire on board')
 
-	fig42 = px.scatter(data, x = 'Time_raw', y = 'engine_battery_voltage_V')
-	fig42.show()
+	fig12 = plot_noisy_msg(Data.telemetry_raw['oil_pressure_Bar'], Data.telemetry_raw['Time'],'Oil Pressure (Bar)',100)
+	fig13 = plot_binary_msg(Data.telemetry_raw['engine_water_temperature_deg'], Data.telemetry_raw['Time'],'Engine water temperature (deg)',label_time = False)
+	fig14 = plot_binary_msg(Data.telemetry_raw['engineon_hours_h'], Data.telemetry_raw['Time'],'Engine on hours',label_time = False)
+	fig15 = plot_binary_msg(Data.telemetry_raw['main_battery_voltage_V'], Data.telemetry_raw['Time'],'Main battery voltage (V)',label_time = False)
+	fig16 = plot_binary_msg(Data.telemetry_raw['backup_battery_voltage_V'], Data.telemetry_raw['Time'],'Backup battery voltage (V)',label_time = False)
+	fig17 = plot_noisy_msg(Data.telemetry_raw['engine_battery_voltage_V'], Data.telemetry_raw['Time'],'Engine Battery Voltage (V)',100)
+	fig18 = plot_binary_msg(Data.telemetry_raw['percent_main_battery'], Data.telemetry_raw['Time'],'Main battery (%)',label_time = False)
+	fig19 = plot_binary_msg(Data.telemetry_raw['percent_backup_battery'], Data.telemetry_raw['Time'],'Backup battery (%)',label_time = False)
+
+	fig20 = plot_binary_msg(Data.telemetry_raw['consumed_current_main_battery_Ah'], Data.telemetry_raw['Time'],'Consumed current main battery (Ah)',label_time = False)
+	fig21 = plot_binary_msg(Data.telemetry_raw['consumed_current_backup_battery_Ah'], Data.telemetry_raw['Time'],'Consumed current backup battery (Ah)',label_time = False)
+	fig22 = plot_binary_msg(Data.telemetry_raw['current_main_battery_A'], Data.telemetry_raw['Time'],'Current Main Battery (A)',label_time = False)
+	fig23 = plot_binary_msg(Data.telemetry_raw['current_backup_battery_A'], Data.telemetry_raw['Time'],'Current Backup Battery (A)',label_time = False)
+	fig24 = plot_binary_msg(Data.telemetry_raw['time_left_main_battery_mins'], Data.telemetry_raw['Time'],'Time Left Main Battery (mins)',label_time = False)
+	fig25 = plot_binary_msg(Data.telemetry_raw['time_left_backup_battery_mins'], Data.telemetry_raw['Time'],'Time Left Backup Battery (mins)',label_time = False)
+	fig26 = plot_noisy_msg(Data.telemetry_raw['electronics_temperature_deg'], Data.telemetry_raw['Time'],'Electronics Temperature (deg)',100)
+	fig27 = plot_noisy_msg(Data.telemetry_raw['electronics_hygrometry_percent'], Data.telemetry_raw['Time'],'Electronics Hygrometry (%)',100)
+	fig28 = plot_binary_msg(Data.telemetry_raw['engine_temperature_deg'], Data.telemetry_raw['Time'],'Engine Temperature (deg)',label_time = False)
+	fig29 = plot_binary_msg(Data.telemetry_raw['engine_hygrometry_percent'], Data.telemetry_raw['Time'],'Engine Hygrometry (%)',label_time = False)
+
+	
+
+
+	ihm.ihm_telemetry(fig1,fig2,fig3,fig4,fig5,fig6,fig7,fig8,fig9,fig10,fig11,fig12,fig13,fig14,fig15,fig16,fig17,fig18,fig19,fig20,fig21,fig22,fig23,fig24,fig25,fig26,fig27,fig28,fig29)
 
 
 
+	# plot_binary_msg(Data.drix_status_raw['remoteControlLost'],Data.drix_status_raw['Time'], "Remote Control Lost")
 
 # = = = = = = = = = = = = = = = = = = = = Tools  = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+def plot_noisy_msg(list_msg,list_te, Title = 'Binary MSG', n = 10): 
+
+	fig, ax = plt.subplots()
+
+	Ly = [np.mean(list_msg[k:k + n]) for k in range(0,len(list_msg) - n,n)]
+
+	list_t = [str(k.strftime('%H:%M')) for k in list_te]
+	list_index = xlabel_list(list_t, c = 10)
+
+	Lx = list_index[:len(list_msg) - n:n]
+
+	if np.max(Ly) < 10:
+		ax.set_ylim(np.min(Ly) - 1, np.max(Ly) + 1)
+
+	else: 
+		ax.set_ylim(np.min(Ly) - int(np.max(Ly)//10), np.max(Ly) + int(np.max(Ly)//10))
+
+
+	fig.set_figheight(2)
+	fig.set_figwidth(18)
+
+	plt.title(Title)
+
+	ax.plot(Lx,Ly,'blue')
+	plt.close()
+
+	# mpld3.show()
+	return(fig)
+
+
+
+def plot_binary_msg(list_msg,list_te, Title = 'Binary MSG', label_time = True): 
+
+	fig, ax = plt.subplots()
+
+	list_t = [str(k.strftime('%H:%M')) for k in list_te]
+
+	list_index = xlabel_list(list_t, c = 10)
+
+	Ly = [list_msg[0]]
+	Lx = [list_index[0]]
+
+	if label_time:
+		labels = [str(list_t[0])]
+
+	else: 
+		labels = [list_msg[0]]
+
+	x = [list_msg[0]]
+	y = [list_index[0]]
+
+	for k in range(1,len(list_msg)):
+
+		if list_msg[k] != Ly[-1]:
+
+			Ly.append(list_msg[k-1])
+			Lx.append(list_index[k-1])
+
+			Ly.append(list_msg[k])
+			Lx.append(list_index[k])
+
+			if label_time:
+				labels.append(str(list_te[k].strftime('%H:%M:%S')))
+				labels.append(str(list_te[k - 1].strftime('%H:%M:%S')))
+				
+			else:
+				labels.append(list_msg[k])
+				labels.append(list_msg[k - 1]) 
+				
+	Ly.append(list_msg[len(list_msg)-1])
+	Lx.append(list_index[len(list_index)-1])
+
+	if label_time:
+		labels.append(str(list_t[-1]))
+	else:
+		labels.append(list_msg[len(list_msg)-1]) 
+
+	x.append(list_msg[len(list_msg)-1])
+	y.append(list_index[len(list_index)-1])
+
+
+	ax.plot(Lx,Ly,'blue')
+	points = ax.scatter(Lx,Ly, s = 8, alpha = 0.)
+
+	tooltip = plugins.PointHTMLTooltip(points, labels)
+
+	plugins.connect(fig, tooltip)
+
+	ax.set_ylim(np.min(Ly) - 1, np.max(Ly) + 1)
+
+	fig.set_figheight(2)
+	fig.set_figwidth(18)
+
+	plt.title(Title)
+
+	plt.close()
+	# mpld3.save_html(fig,"BinaryMSG.html")
+	# mpld3.show()
+
+	return(fig)
+
 
 
 def subplots_N_rows(n_data, n_col):
@@ -302,36 +447,28 @@ def subplots_col_ligne(n_data,n_col,n_row):
 	return(l)
 
 
-def xlabel_list(Lx,Ly, c = 10): # c is the labels number   
+def xlabel_list(Lx, c = 10): # c is the labels number   
 
-	pas = round(len(Lx)/c)
+	pas = int(len(Lx)/c) 
 	reste = (len(Lx) - 1)%pas 
 
-	lili = Ly[::pas].values.tolist()
-	lala = Lx[::pas].values.tolist()
+	if isinstance(Lx, list):
+		lala = Lx[::pas]
 
-	x = pd.Series(lili, index = lala)
+	else: # it's a dataframe variable
+		lala = Lx[::pas].values.tolist()
+
+	x = pd.Series(np.zeros(len(lala)), index = lala)
 	x.plot(alpha=0.)
 	plt.xticks(range(len(x)), x.index) 
 
 	a = 0
-	b = len(lili) - 1 + reste*(1/pas)
+	b = len(lala) - 1 + reste*(1/pas)
 	c = len(Lx)
 
 	t = np.linspace(a,b,c)
 
 	return(t)
-
-
-# fig = make_subplots(rows= , cols= , shared_xaxes=False,subplot_titles = Title)	
-
-# fig1 = px.line(data, x = , y = ,title = , labels={ "x": "Date", "y": " "})	
-# fig.add_trace(fig1["data"][0], row= , col= )
-
-# fig1 = px.line(data, x = , y = ,title = , labels={ "x": "Date", "y": " "})	
-# fig.add_trace(fig1["data"][0], row= , col= )
-
-
 
 
 

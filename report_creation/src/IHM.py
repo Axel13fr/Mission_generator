@@ -1,9 +1,11 @@
 from airium import Airium
 from datetime import datetime
 from datetime import timedelta
+import matplotlib.pyplot as plt, mpld3
 
 import Data_process as Dp # local import
 import Display as Disp # local import
+
 
 # - - - - - - - - - - - - - - - - - - - 
 # This script handles all IHM creation
@@ -31,6 +33,9 @@ class Report_data(object):
 
 		# - - - Display - - -
 		self.gps_fig = None
+		self.dist_fig = None
+		self.speed_fig = None
+		self.mission_dist_fig = None
 
 		self.drix_status_gaso_fig = None
 		self.drix_status_gaso_data = None
@@ -283,4 +288,66 @@ def generate_ihm(report_data):
 	# print(html)
 
 	with open('../IHM/Mission_report.html', 'w') as f:
+		 f.write(str(html))
+
+
+
+def ihm_telemetry(fig1,fig2,fig3,fig4,fig5,fig6,fig7,fig8,fig9,fig10,fig11,fig12,fig13,fig14,fig15,fig16,fig17,fig18,fig19,fig20,fig21,fig22,fig23,fig24,fig25,fig26,fig27,fig28,fig29):
+
+
+	a = Airium()
+
+	a('<!DOCTYPE html>')
+	with a.html(lang="pl"):
+		with a.head():
+			a.meta(charset="utf-8")
+			a.title(_t="Bilan telemetry")
+
+		with a.body():
+			with a.h1(id="id23409231", klass='main_header'):
+				a("Binary Messages")
+
+			with a.p():
+			 	a(mpld3.fig_to_html(fig1))
+			 	a(mpld3.fig_to_html(fig2))
+			 	a(mpld3.fig_to_html(fig3))
+			 	a(mpld3.fig_to_html(fig4))
+			 	a(mpld3.fig_to_html(fig5))
+			 	a(mpld3.fig_to_html(fig6))
+			 	a(mpld3.fig_to_html(fig7))
+			 	a(mpld3.fig_to_html(fig8))
+			 	a(mpld3.fig_to_html(fig9))
+			 	a(mpld3.fig_to_html(fig10))
+			 	a(mpld3.fig_to_html(fig11))
+
+
+			with a.h1(id="id23409231", klass='main_header'):
+				a("Graphs")
+
+			with a.p():
+
+			 	a(mpld3.fig_to_html(fig12))
+			 	a(mpld3.fig_to_html(fig13))
+			 	a(mpld3.fig_to_html(fig14))
+			 	a(mpld3.fig_to_html(fig15))
+			 	a(mpld3.fig_to_html(fig16))
+			 	a(mpld3.fig_to_html(fig17))
+			 	a(mpld3.fig_to_html(fig18))
+			 	a(mpld3.fig_to_html(fig19))
+			 	a(mpld3.fig_to_html(fig20))
+			 	a(mpld3.fig_to_html(fig21))
+			 	a(mpld3.fig_to_html(fig22))
+			 	a(mpld3.fig_to_html(fig23))
+			 	a(mpld3.fig_to_html(fig24))
+			 	a(mpld3.fig_to_html(fig25))
+			 	a(mpld3.fig_to_html(fig26))
+			 	a(mpld3.fig_to_html(fig27))
+			 	a(mpld3.fig_to_html(fig28))
+			 	a(mpld3.fig_to_html(fig29))
+
+
+	html = str(a) # casting to string extracts the value
+
+
+	with open('../IHM/telemetry/Bilan_binaryMSG.html', 'w') as f:
 		 f.write(str(html))

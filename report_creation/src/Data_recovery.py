@@ -16,8 +16,9 @@ from mdt_msgs.msg import Gps
 from ixblue_ins_msgs.msg import Ins
 from drix_msgs.msg import Telemetry2
 from drix_msgs.msg import Telemetry3
+from drix_msgs.msg import RemoteControlCommands
+from drix_msgs.msg import GpuState
 from ds_kongsberg_msgs.msg import KongsbergStatus
-
 
 
 
@@ -97,7 +98,7 @@ class Drix_data(object):
 
     def __init__(self,L_bags):
 
-        self.list_topics = ['/gps', '/kongsberg_2040/kmstatus','/drix_status','/telemetry2','/d_phins/aipov','/mothership_gps']
+        self.list_topics = ['/gps', '/kongsberg_2040/kmstatus','/drix_status','/telemetry2','/d_phins/aipov','/mothership_gps','/rc_command','/gpu_state']
         # self.list_topics = ['/gps','/telemetry2']
 
         # - - - Raw data - - - 
@@ -107,6 +108,8 @@ class Drix_data(object):
         self.phins_raw = None
         self.telemetry_raw = None
         self.mothership_raw = None
+        self.rc_command_raw = None 
+        self.gpu_state_raw = None
 
         # - - - Undersampled data - - -
         self.gps_UnderSamp_d = None # Under distance sampling
@@ -135,6 +138,8 @@ class Drix_data(object):
         telemetry_List_pd = []
         mothership_List_pd = []
         kongsberg_status_List_pd = []
+        rc_command_pd = []
+        gpu_state_pd = []
 
         index = 0
         index_act = 0
@@ -152,8 +157,13 @@ class Drix_data(object):
             dic_gps = {'Time_raw':[],'Time':[],'Time_str':[],'latitude':[],'longitude':[],'action_type':[],'action_type_index':[],'fix_quality':[],'list_x':[],'list_y':[]}
             dic_drix_status = {'Time_raw':[],'Time':[],'Time_str':[],'gasolineLevel_percent':[],'drix_mode':[],'emergency_mode':[],'remoteControlLost':[],'shutdown_requested':[],'reboot_requested':[],'thruster_RPM':[],'rudderAngle_deg':[],'drix_clutch':[]}
             dic_phins = {'Time_raw':[],'Time':[],'Time_str':[],'headingDeg':[],'rollDeg':[],'pitchDeg':[],'latitudeDeg':[],'longitudeDeg':[]}
-            dic_telemetry = {'Time_raw':[],'Time':[],'Time_str':[],'oil_pressure_Bar':[],'engine_water_temperature_deg':[],'main_battery_voltage_V':[],'is_water_in_fuel_on':[],'percent_main_battery':[],'percent_backup_battery':[],'consumed_current_main_battery_Ah':[],'current_main_battery_A':[],'time_left_main_battery_mins':[],'engine_battery_voltage_V':[]}
+            dic_telemetry = {'Time_raw':[],'Time':[],'Time_str':[],'is_drix_started':[],'is_navigation_lights_on':[],'is_foghorn_on':[],'is_fans_on':[], 'oil_pressure_Bar':[],'engine_water_temperature_deg':[],'is_water_temperature_alarm_on':[],'is_oil_pressure_alarm_on':[],'is_water_in_fuel_on':[],'engineon_hours_h':[],'main_battery_voltage_V':[],'backup_battery_voltage_V':[],'engine_battery_voltage_V':[],'percent_main_battery':[],'percent_backup_battery':[],
+            'consumed_current_main_battery_Ah':[],'consumed_current_backup_battery_Ah':[],'current_main_battery_A':[],'current_backup_battery_A':[],'time_left_main_battery_mins':[],'time_left_backup_battery_mins':[],'electronics_temperature_deg':[],'electronics_hygrometry_percent':[],'electronics_water_ingress':[],'electronics_fire_on_board':[],'engine_temperature_deg':[],'engine_hygrometry_percent':[],'engine_water_ingress':[],'engine_fire_on_board':[]}
             dic_mothership = {'Time_raw':[],'Time':[],'Time_str':[],'latitude':[],'longitude':[]}
+            dic_rc_command = {'Time_raw':[],'Time':[],'Time_str':[],'remote_type':[]}
+            dic_gpu_state = {'Time_raw':[],'Time':[],'Time_str':[],'temperature_deg_c':[],"gpu_utilization_percent":[],"mem_utilization_percent":[],"used_mem_GB":[],"total_mem_GB":[],"power_consumption_W":[]}
+
+
             dic_kongsberg_status = {'Time_raw' : [],'pu_powered' : [],'pu_connected' : [],'position_1' : []}
 
             bag = rosbag.Bag(bagfile.bag_path)
@@ -227,16 +237,36 @@ class Drix_data(object):
                         dic_telemetry['Time_raw'].append(time_raw)
                         dic_telemetry['Time'].append(time)
                         dic_telemetry['Time_str'].append(time_str)
+                        dic_telemetry['is_drix_started'].append(m.is_drix_started)
+                        dic_telemetry['is_navigation_lights_on'].append(m.is_navigation_lights_on)
+                        dic_telemetry['is_foghorn_on'].append(m.is_foghorn_on)
+                        dic_telemetry['is_fans_on'].append(m.is_fans_on)
                         dic_telemetry['oil_pressure_Bar'].append(m.oil_pressure_Bar)
                         dic_telemetry['engine_water_temperature_deg'].append(m.engine_water_temperature_deg)
+                        dic_telemetry['is_water_temperature_alarm_on'].append(m.is_water_temperature_alarm_on)
+                        dic_telemetry['is_oil_pressure_alarm_on'].append(m.is_oil_pressure_alarm_on)
+                        dic_telemetry['is_water_in_fuel_on'].append(m.is_water_in_fuel_on)
+                        dic_telemetry['engineon_hours_h'].append(m.engineon_hours_h)
                         dic_telemetry['main_battery_voltage_V'].append(m.main_battery_voltage_V)
+                        dic_telemetry['backup_battery_voltage_V'].append(m.backup_battery_voltage_V)
+                        dic_telemetry['engine_battery_voltage_V'].append(m.engine_battery_voltage_V)
                         dic_telemetry['percent_main_battery'].append(m.percent_main_battery)
                         dic_telemetry['percent_backup_battery'].append(m.percent_backup_battery)
                         dic_telemetry['consumed_current_main_battery_Ah'].append(m.consumed_current_main_battery_Ah)
-                        dic_telemetry['is_water_in_fuel_on'].append(m.is_water_in_fuel_on)
+                        dic_telemetry['consumed_current_backup_battery_Ah'].append(m.consumed_current_backup_battery_Ah)
                         dic_telemetry['current_main_battery_A'].append(m.current_main_battery_A)
+                        dic_telemetry['current_backup_battery_A'].append(m.current_backup_battery_A)
                         dic_telemetry['time_left_main_battery_mins'].append(m.time_left_main_battery_mins)
-                        dic_telemetry['engine_battery_voltage_V'].append(m.engine_battery_voltage_V)
+                        dic_telemetry['time_left_backup_battery_mins'].append(m.time_left_backup_battery_mins)
+                        dic_telemetry['electronics_temperature_deg'].append(m.electronics_temperature_deg)
+                        dic_telemetry['electronics_hygrometry_percent'].append(m.electronics_hygrometry_percent)
+                        dic_telemetry['electronics_water_ingress'].append(m.electronics_water_ingress)
+                        dic_telemetry['electronics_fire_on_board'].append(m.electronics_fire_on_board)
+                        dic_telemetry['engine_temperature_deg'].append(m.engine_temperature_deg)
+                        dic_telemetry['engine_hygrometry_percent'].append(m.engine_hygrometry_percent)
+                        dic_telemetry['engine_water_ingress'].append(m.engine_water_ingress)
+                        dic_telemetry['engine_fire_on_board'].append(m.engine_fire_on_board)
+               
             
 
                     if topic == '/telemetry3':
@@ -254,6 +284,8 @@ class Drix_data(object):
                         dic_telemetry['time_left_main_battery_mins'].append(m.time_left_main_battery_mins)
                         dic_telemetry['engine_battery_voltage_V'].append(m.engine_battery_voltage_V)
 
+                  
+                      # /trimmer_status
 
                     # if topic == '/mothership_gps':
                     #     m:mothership_gps = msg 
@@ -262,6 +294,26 @@ class Drix_data(object):
                     #     dic_mothership['Time_str'].append(time_str)
                     #     dic_mothership['latitude'].append(m.latitude)
                     #     dic_mothership['longitude'].append(m.longitude)
+
+                    # if topic == '/rc_command':
+                    #     m:RemoteControlCommands = msg
+                    #     dic_rc_command['Time_raw'].append(time_raw)
+                    #     dic_rc_command['Time'].append(time)
+                    #     dic_rc_command['Time_str'].append(time_str)
+                    #     dic_rc_command['reception_mode'].append(m.reception_mode)
+
+                    if topic == '/gpu_state':
+                        m:GpuState = msg
+                        dic_gpu_state['Time_raw'].append(time_raw)
+                        dic_gpu_state['Time'].append(time)
+                        dic_gpu_state['Time_str'].append(time_str)
+                        dic_gpu_state["temperature_deg_c"].append(m.temperature_deg_c)
+                        dic_gpu_state["gpu_utilization_percent"].append(m.gpu_utilization_percent)
+                        dic_gpu_state["mem_utilization_percent"].append(m.mem_utilization_percent)
+                        dic_gpu_state["used_mem_GB"].append(m.used_mem_GB)
+                        dic_gpu_state["total_mem_GB"].append(m.total_mem_GB)
+                        dic_gpu_state["power_consumption_W"].append(m.power_consumption_W)
+
 
 
                     if topic == '/kongsberg_2040/kmstatus':
@@ -292,6 +344,12 @@ class Drix_data(object):
 
             if dic_kongsberg_status['Time_raw']:
                 kongsberg_status_List_pd.append(pd.DataFrame.from_dict(dic_kongsberg_status))
+
+            if dic_rc_command['Time_raw']:
+                rc_command_pd.append(pd.DataFrame.from_dict(dic_rc_command))
+
+            if dic_gpu_state['Time_raw']:
+                gpu_state_pd.append(pd.DataFrame.from_dict(dic_gpu_state))
 
 
         # - - - - - - - - - - - - - - - - - - 
@@ -343,6 +401,21 @@ class Drix_data(object):
         else:
             print('Error, no kongsberg_status data found')
 
+
+        if len(rc_command_pd) > 0:
+            self.rc_command_raw = pd.concat(rc_command_pd, ignore_index=True)
+            print('RC_command data imported ',len(rc_command_pd),'/',len(L_bags))
+
+        else:
+            print('Error, no RC_command data found')
+
+
+        if len(gpu_state_pd) > 0:
+            self.gpu_state_raw = pd.concat(gpu_state_pd, ignore_index=True)
+            print('GPU State data imported ',len(gpu_state_pd),'/',len(L_bags))
+
+        else:
+            print('Error, no GPU State data found')
 
 
 # -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
@@ -434,6 +507,7 @@ if __name__ == '__main__':
     Disp.plot_gps(report_data, Data)
     # Disp.plot_drix_status(report_data,Data)
 
+    Disp.plot_telemetry(report_data, Data)
 
     # IHM.generate_ihm(report_data)
 

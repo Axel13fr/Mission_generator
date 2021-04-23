@@ -292,6 +292,9 @@ def generate_ihm(report_data):
 
 
 
+# = = = = = = = = = = = = = = = = = = /Telemetry2  = = = = = = = = = = = = = = = = = = = = = = = = = 
+
+
 def ihm_telemetry(fig1,fig2,fig3,fig4,fig5,fig6,fig7,fig8,fig9,fig10,fig11,fig12,fig13,fig14,fig15,fig16,fig17,fig18,fig19,fig20,fig21,fig22,fig23,fig24,fig25,fig26,fig27,fig28,fig29):
 
 
@@ -350,4 +353,68 @@ def ihm_telemetry(fig1,fig2,fig3,fig4,fig5,fig6,fig7,fig8,fig9,fig10,fig11,fig12
 
 
 	with open('../IHM/telemetry/Bilan_binaryMSG.html', 'w') as f:
+		 f.write(str(html))
+
+
+# = = = = = = = = = = = = = = = = = = /gpu_state  = = = = = = = = = = = = = = = = = = = = = = = = = 
+
+
+def ihm_gpu_state(fig1,fig2,fig3,fig4,fig5,fig6):
+
+	a = Airium()
+
+	a('<!DOCTYPE html>')
+	with a.html(lang="pl"):
+		with a.head():
+			a.meta(charset="utf-8")
+			a.title(_t="Bilan gpu_state")
+
+		with a.body():
+			with a.h1(id="id23409231", klass='main_header'):
+				a("Gpu State Graphs")
+
+			with a.p():
+			 	a(mpld3.fig_to_html(fig1))
+			 	a(mpld3.fig_to_html(fig2))
+			 	a(mpld3.fig_to_html(fig3))
+			 	a(mpld3.fig_to_html(fig4))
+			 	a(mpld3.fig_to_html(fig5))
+			 	a(mpld3.fig_to_html(fig6))
+			 	
+	html = str(a) # casting to string extracts the value
+
+
+	with open('../IHM/gpu_state/Bilan_gpu_state.html', 'w') as f:
+		 f.write(str(html))
+
+
+
+# = = = = = = = = = = = = = = = = = = /gpu_state  = = = = = = = = = = = = = = = = = = = = = = = = = 
+
+
+def ihm_trimmer_status(fig1,fig2,fig3,fig4,fig5):
+
+	a = Airium()
+
+	a('<!DOCTYPE html>')
+	with a.html(lang="pl"):
+		with a.head():
+			a.meta(charset="utf-8")
+			a.title(_t="Bilan Trimmer Status")
+
+		with a.body():
+			with a.h1(id="id23409231", klass='main_header'):
+				a("Trimmer Status Graphs")
+
+			with a.p():
+			 	a(mpld3.fig_to_html(fig1))
+			 	a(mpld3.fig_to_html(fig2))
+			 	a(mpld3.fig_to_html(fig3))
+			 	a(mpld3.fig_to_html(fig4))
+			 	a(mpld3.fig_to_html(fig5))
+			 	
+	html = str(a) # casting to string extracts the value
+
+
+	with open('../IHM/trimmer_status/Bilan_trimmer_status.html', 'w') as f:
 		 f.write(str(html))

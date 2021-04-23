@@ -18,6 +18,11 @@ from drix_msgs.msg import Telemetry2
 from drix_msgs.msg import Telemetry3
 from drix_msgs.msg import RemoteControlCommands
 from drix_msgs.msg import GpuState
+from drix_msgs.msg import TrimmerStatus
+
+from drix_msgs.msg import DrixOutput # drix_status
+from d_phins.msg import Aipov
+
 from ds_kongsberg_msgs.msg import KongsbergStatus
 
 
@@ -98,7 +103,7 @@ class Drix_data(object):
 
     def __init__(self,L_bags):
 
-        self.list_topics = ['/gps', '/kongsberg_2040/kmstatus','/drix_status','/telemetry2','/d_phins/aipov','/mothership_gps','/rc_command','/gpu_state']
+        self.list_topics = ['/gps', '/kongsberg_2040/kmstatus','/drix_status','/telemetry2','/d_phins/aipov','/mothership_gps','/rc_command','/gpu_state','/trimmer_status']
         # self.list_topics = ['/gps','/telemetry2']
 
         # - - - Raw data - - - 
@@ -110,6 +115,7 @@ class Drix_data(object):
         self.mothership_raw = None
         self.rc_command_raw = None 
         self.gpu_state_raw = None
+        self.trimmer_status_raw = None
 
         # - - - Undersampled data - - -
         self.gps_UnderSamp_d = None # Under distance sampling
@@ -140,6 +146,7 @@ class Drix_data(object):
         kongsberg_status_List_pd = []
         rc_command_pd = []
         gpu_state_pd = []
+        trimmer_status_pd = []
 
         index = 0
         index_act = 0
@@ -162,8 +169,7 @@ class Drix_data(object):
             dic_mothership = {'Time_raw':[],'Time':[],'Time_str':[],'latitude':[],'longitude':[]}
             dic_rc_command = {'Time_raw':[],'Time':[],'Time_str':[],'remote_type':[]}
             dic_gpu_state = {'Time_raw':[],'Time':[],'Time_str':[],'temperature_deg_c':[],"gpu_utilization_percent":[],"mem_utilization_percent":[],"used_mem_GB":[],"total_mem_GB":[],"power_consumption_W":[]}
-
-
+            dic_trimmer_status = {'Time_raw':[],'Time':[],'Time_str':[],"primary_powersupply_consumption_A":[],"secondary_powersupply_consumption_A":[],"motor_temperature_degC":[],"pcb_temperature_degC":[],"relative_humidity_percent":[],"position_deg":[]}
             dic_kongsberg_status = {'Time_raw' : [],'pu_powered' : [],'pu_connected' : [],'position_1' : []}
 
             bag = rosbag.Bag(bagfile.bag_path)
@@ -192,32 +198,32 @@ class Drix_data(object):
                         dic_gps['list_y'].append(y)
 
 
-                    # if topic == '/drix_status':
-                    #     m:drix_status = msg
-                    #     dic_drix_status['Time_raw'].append(time_raw)
-                    #     dic_drix_status['Time'].append(time)
-                    #     dic_drix_status['Time_str'].append(time_str)
-                    #     dic_drix_status['gasolineLevel_percent'].append(m.gasolineLevel_percent)
-                    #     dic_drix_status['drix_mode'].append(m.drix_mode)
-                    #     dic_drix_status['emergency_mode'].append(m.emergency_mode)
-                    #     dic_drix_status['remoteControlLost'].append(m.remoteControlLost)
-                    #     dic_drix_status['shutdown_requested'].append(m.shutdown_requested)
-                    #     dic_drix_status['reboot_requested'].append(m.reboot_requested)
-                    #     dic_drix_status['thruster_RPM'].append(m.thruster_RPM)
-                    #     dic_drix_status['rudderAngle_deg'].append(m.rudderAngle_deg)
-                    #     dic_drix_status['drix_clutch'].append(m.drix_clutch)
+                    if topic == '/drix_status':
+                        m:DrixOutput = msg
+                        dic_drix_status['Time_raw'].append(time_raw)
+                        dic_drix_status['Time'].append(time)
+                        dic_drix_status['Time_str'].append(time_str)
+                        dic_drix_status['gasolineLevel_percent'].append(m.gasolineLevel_percent)
+                        dic_drix_status['drix_mode'].append(m.drix_mode)
+                        dic_drix_status['emergency_mode'].append(m.emergency_mode)
+                        dic_drix_status['remoteControlLost'].append(m.remoteControlLost)
+                        dic_drix_status['shutdown_requested'].append(m.shutdown_requested)
+                        dic_drix_status['reboot_requested'].append(m.reboot_requested)
+                        dic_drix_status['thruster_RPM'].append(m.thruster_RPM)
+                        dic_drix_status['rudderAngle_deg'].append(m.rudderAngle_deg)
+                        dic_drix_status['drix_clutch'].append(m.drix_clutch)
 
 
-                    # if topic == '/d_phins/aipov':
-                    #     m:aipov = msg 
-                    #     dic_phins['Time_raw'].append(time_raw)
-                    #     dic_phins['Time'].append(time)
-                    #     dic_phins['Time_str'].append(time_str)
-                    #     dic_phins['headingDeg'].append(m.headingDeg)
-                    #     dic_phins['rollDeg'].append(m.rollDeg)
-                    #     dic_phins['pitchDeg'].append(m.pitchDeg)
-                    #     dic_phins['latitudeDeg'].append(m.latitudeDeg)
-                    #     dic_phins['longitudeDeg'].append(m.longitudeDeg)
+                    if topic == '/d_phins/aipov':
+                        m:aipov = msg 
+                        dic_phins['Time_raw'].append(time_raw)
+                        dic_phins['Time'].append(time)
+                        dic_phins['Time_str'].append(time_str)
+                        dic_phins['headingDeg'].append(m.headingDeg)
+                        dic_phins['rollDeg'].append(m.rollDeg)
+                        dic_phins['pitchDeg'].append(m.pitchDeg)
+                        dic_phins['latitudeDeg'].append(m.latitudeDeg)
+                        dic_phins['longitudeDeg'].append(m.longitudeDeg)
                  
 
                     if topic == '/d_phins/ins':  
@@ -287,13 +293,13 @@ class Drix_data(object):
                   
                       # /trimmer_status
 
-                    # if topic == '/mothership_gps':
-                    #     m:mothership_gps = msg 
-                    #     dic_mothership['Time_raw'].append(time_raw)
-                    #     dic_mothership['Time'].append(time)
-                    #     dic_mothership['Time_str'].append(time_str)
-                    #     dic_mothership['latitude'].append(m.latitude)
-                    #     dic_mothership['longitude'].append(m.longitude)
+                    if topic == '/mothership_gps':
+                        m:Gps = msg 
+                        dic_mothership['Time_raw'].append(time_raw)
+                        dic_mothership['Time'].append(time)
+                        dic_mothership['Time_str'].append(time_str)
+                        dic_mothership['latitude'].append(m.latitude)
+                        dic_mothership['longitude'].append(m.longitude)
 
                     # if topic == '/rc_command':
                     #     m:RemoteControlCommands = msg
@@ -315,6 +321,18 @@ class Drix_data(object):
                         dic_gpu_state["power_consumption_W"].append(m.power_consumption_W)
 
 
+                    if topic == '/trimmer_status':
+                        m:TrimmerStatus = msg
+                        dic_trimmer_status['Time_raw'].append(time_raw)
+                        dic_trimmer_status['Time'].append(time)
+                        dic_trimmer_status['Time_str'].append(time_str) 
+                        dic_trimmer_status["primary_powersupply_consumption_A"].append(m.primary_powersupply_consumption_A)
+                        dic_trimmer_status["secondary_powersupply_consumption_A"].append(m.secondary_powersupply_consumption_A)
+                        dic_trimmer_status["motor_temperature_degC"].append(m.motor_temperature_degC)
+                        dic_trimmer_status["pcb_temperature_degC"].append(m.pcb_temperature_degC)
+                        dic_trimmer_status["relative_humidity_percent"].append(m.relative_humidity_percent)
+                        dic_trimmer_status["position_deg"].append(m.position_deg)
+                 
 
                     if topic == '/kongsberg_2040/kmstatus':
                         m:KongsbergStatus = msg 
@@ -351,6 +369,8 @@ class Drix_data(object):
             if dic_gpu_state['Time_raw']:
                 gpu_state_pd.append(pd.DataFrame.from_dict(dic_gpu_state))
 
+            if dic_trimmer_status['Time_raw']:
+                trimmer_status_pd.append(pd.DataFrame.from_dict(dic_trimmer_status))
 
         # - - - - - - - - - - - - - - - - - - 
 
@@ -416,6 +436,14 @@ class Drix_data(object):
 
         else:
             print('Error, no GPU State data found')
+
+
+        if len(trimmer_status_pd) > 0:
+            self.trimmer_status_raw = pd.concat(trimmer_status_pd, ignore_index=True)
+            print('Trimmer Status data imported ',len(trimmer_status_pd),'/',len(L_bags))
+
+        else:
+            print('Error, no Trimmer Status data found')
 
 
 # -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
@@ -504,14 +532,23 @@ if __name__ == '__main__':
     # # - - -
     # report_data.collect_drix_status_binary_msg(Data)
     # - - -
-    Disp.plot_gps(report_data, Data)
+
+
+    # Disp.plot_gps(report_data, Data)
+
+
     # Disp.plot_drix_status(report_data,Data)
 
-    Disp.plot_telemetry(report_data, Data)
+
+    # Disp.plot_telemetry(report_data, Data)
+
+    # Disp.plot_gpu_state(report_data, Data)
+
+    # Disp.plot_trimmer_status(report_data, Data)
 
     # IHM.generate_ihm(report_data)
 
-
+    Disp.plot_drix_status(report_data, Data)
 
 
 

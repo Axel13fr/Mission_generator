@@ -101,7 +101,7 @@ def plot_gps(report_data, Data):
 
 	report_data.gps_fig = fig1
 
-	mpld3.save_html(fig1,"../IHM/gps/gps.html")
+	# mpld3.save_html(fig1,"../IHM/gps/gps.html")
 	# mpld3.show()
 
 
@@ -138,7 +138,7 @@ def plot_gps(report_data, Data):
 	report_data.dist_fig = fig2
 
 	# mpld3.show()
-	mpld3.save_html(fig2,"../IHM/gps/dist.html")
+	# mpld3.save_html(fig2,"../IHM/gps/dist.html")
 
 
 	
@@ -191,7 +191,7 @@ def plot_gps(report_data, Data):
 	report_data.speed_fig = fig3
 	
 	# mpld3.show()
-	mpld3.save_html(fig3,"../IHM/gps/speed.html")
+	# mpld3.save_html(fig3,"../IHM/gps/speed.html")
 
 
 
@@ -213,169 +213,104 @@ def plot_gps(report_data, Data):
 	report_data.mission_dist_fig = fig4
 
 	# mpld3.show()
-	mpld3.save_html(fig4,"../IHM/gps/mission_dist.html")
+	# mpld3.save_html(fig4,"../IHM/gps/mission_dist.html")
 
-
-
+	ihm.ihm_gps(fig1,fig2,fig3,fig4)
 
 # = = = = = = = = = = = = = = = =  /drix_status  = = = = = = = = = = = = = = = = = = = = = = = =
 
 def plot_drix_status(report_data, Data):
 
-	# fig1 = plot_noisy_msg(Data.drix_status_raw['thruster_RPM'], Data.drix_status_raw['Time'],'thruster_RPM',100)
-	# fig2 = plot_centered_sawtooth_curve(Data.drix_status_raw['rudderAngle_deg'], Data.drix_status_raw['Time'],'rudderAngle_deg',200)
-	# fig3 = plot_noisy_msg(Data.drix_status_raw['gasolineLevel_percent'], Data.drix_status_raw['Time'],'Gasoline Level (%)',15000)
+	y_binary_axis = {"vals":[0,1],"keys":["False","True"]}
 
-	# fig4 = plot_binary_msg(Data.drix_status_raw['emergency_mode'], Data.drix_status_raw['Time'],'Emergency mode')
-	# fig5 = plot_binary_msg(Data.drix_status_raw['remoteControlLost'], Data.drix_status_raw['Time'],'Remote Control Lost')
-	# fig6 = plot_binary_msg(Data.drix_status_raw['shutdown_requested'], Data.drix_status_raw['Time'],'shutdown_requested')
-	# fig7 = plot_binary_msg(Data.drix_status_raw['reboot_requested'], Data.drix_status_raw['Time'],'reboot_requested')
+	fig1 = plot_noisy_msg(Data.drix_status_raw['thruster_RPM'], Data.drix_status_raw['Time'],'thruster_RPM',100)
+	fig2 = plot_centered_sawtooth_curve(Data.drix_status_raw['rudderAngle_deg'], Data.drix_status_raw['Time'],'rudderAngle_deg',200)
+	fig3 = plot_noisy_msg(Data.drix_status_raw['gasolineLevel_percent'], Data.drix_status_raw['Time'],'Gasoline Level (%)',15000)
+	fig4 = plot_data_reduced(Data.drix_status_raw['emergency_mode'], Data.drix_status_raw['Time'],'Emergency mode',y_binary_axis)
+	fig5 = plot_data_reduced(Data.drix_status_raw['remoteControlLost'], Data.drix_status_raw['Time'],'Remote Control Lost',y_binary_axis)
+	fig6 = plot_data_reduced(Data.drix_status_raw['shutdown_requested'], Data.drix_status_raw['Time'],'shutdown_requested',y_binary_axis)
+	fig7 = plot_data_reduced(Data.drix_status_raw['reboot_requested'], Data.drix_status_raw['Time'],'reboot_requested',y_binary_axis)
+	fig8 = plot_drix_mode(Data)
+	fig9 = plot_drix_clutch(Data)
+	fig10 = plot_keel_state(Data)
 
-	fig7 = plot_drix_mode(Data)
+	ihm.ihm_drix_status(fig1,fig2,fig3,fig4,fig5,fig6,fig7,fig8,fig9,fig10)
+
+
+def plot_drix_mode(Data, Title='Drix Mode'):
+
+	encoder_dic = {"DOCKING":0,"MANUAL":1,"AUTO":2}
+
+	label_names_unique = Data.drix_status_raw['drix_mode'].unique()
+	y_axis = {"vals":list(encoder_dic.values()),"keys":list(encoder_dic.keys())}
+
+	for val in label_names_unique:
+		if val not in y_axis["keys"]:
+			print("Unknown drix mode :",val)
+
+
+	list_msg = [encoder_dic[val] for val in Data.drix_status_raw['drix_mode']]
+
+	fig = plot_data_reduced(list_msg, Data.drix_status_raw['Time'],Title,y_axis)
+
+	return(fig)
+
+
+# - - - - - - - - - - - - 
+
+
+def plot_drix_clutch(Data, Title='Drix Clutch'): # same operation as plot_drix_mode()
+
+
+	encoder_dic = {"FORWARD":0,"NEUTRAL":1,"BACKWARD":2,"ERROR":4}
+
+	label_names_unique = Data.drix_status_raw['drix_clutch'].unique()
+	y_axis = {"vals":list(encoder_dic.values()),"keys":list(encoder_dic.keys())}
+
+	for val in label_names_unique:
+		if val not in y_axis["keys"]:
+			print("Unknown drix clutch :",val)
+
+
+	list_msg = [encoder_dic[val] for val in Data.drix_status_raw['drix_clutch']]
+
+	fig = plot_data_reduced(list_msg, Data.drix_status_raw['Time'],Title,y_axis)
+
+	return(fig)
+
+
+# - - - - - - - - - - - - 
+
+
+def plot_keel_state(Data, Title='Keel state'): # same operation as plot_drix_mode()
 
 	
+	encoder_dic = {"DOWN":0,"MIDDLE":1,"UP":2,"ERROR":4,"GOING UP ERROR":5,"GOING DOWN ERROR":6,"UP AND DOWN ERROR":7}
 
-def plot_drix_mode(Data):
+	label_names_unique = Data.drix_status_raw['keel_state'].unique()
+	y_axis = {"vals":list(encoder_dic.values()),"keys":list(encoder_dic.keys())}
 
-	list_te = Data.drix_status_raw['Time']
-	Title = 'Drix Mode'
+	for val in label_names_unique:
+		if val not in y_axis["keys"]:
+			print("Unknown keel state :",val)
 
-	label_names = Data.drix_status_raw['drix_mode']
-	label_names_unique = label_names.unique()
-	le = preprocessing.LabelEncoder()
-	le.fit(label_names_unique)
+	list_msg = [encoder_dic[val] for val in Data.drix_status_raw['keel_state']]
 
-	label_indices = le.transform(label_names)
+	fig = plot_data_reduced(list_msg, Data.drix_status_raw['Time'],Title,y_axis)
 
-	list_msg = label_indices
-
-
-	fig, ax = plt.subplots()
-
-	list_t = [str(k.strftime('%H:%M')) for k in list_te]
-
-	list_index = xlabel_list(list_t, c = 10)
-
-	Ly = [list_msg[0]]
-	Lx = [list_index[0]]
-
-	labels = [str(list_t[0])]
-
-	x = [list_msg[0]]
-	y = [list_index[0]]
-
-	for k in range(1,len(list_msg)):
-
-		if list_msg[k] != Ly[-1]:
-
-			Ly.append(list_msg[k-1])
-			Lx.append(list_index[k-1])
-
-			Ly.append(list_msg[k])
-			Lx.append(list_index[k])
-
-			labels.append(str(list_te[k].strftime('%H:%M:%S')))
-			labels.append(str(list_te[k - 1].strftime('%H:%M:%S')))
-				
-	
-				
-	Ly.append(list_msg[len(list_msg)-1])
-	Lx.append(list_index[len(list_index)-1])
-
-	labels.append(str(list_t[-1]))
- 
-	x.append(list_msg[len(list_msg)-1])
-	y.append(list_index[len(list_index)-1])
-
-
-	ax.plot(Lx,Ly,'blue')
-	points = ax.scatter(Lx,Ly, s = 20, alpha = 0.6)
-
-	tooltip = plugins.PointHTMLTooltip(points, labels)
-
-	plugins.connect(fig, tooltip)
-
-	ax.set_ylim(np.min(Ly) - 1, np.max(Ly) + 1)
-
-	# plt.yticks([1,2,3,4],['A','B','C','D'])
-
-	print(label_names[0])
-	print(label_names[len(label_names)-2])
-
-	fig.set_figheight(2)
-	fig.set_figwidth(18)
-
-	plt.yticks([0,1,2],label_names_unique)
-
-	plt.title(Title)
-
-	print(Title,"taille ",len(Lx))
-	# mpld3.save_html(fig,"BinaryMSG.html")
-	mpld3.show()
-
-	plt.close()
-
-
-
-
-
-
-
-# def plot_drix_status(report_data, Data):
-
-# 	df = Dp.filter_gasolineLevel(Data)
-
-# 	fig, ax = plt.subplots()
-# 	plt.plot(df['Time_str'], df['gasolineLevel_percent_filtered'])
-# 	plt.xticks(rotation=45, ha="right")
-# 	plt.title("Gasoline Level")
-
-# 	report_data.drix_status_gaso_fig = fig
-# 	report_data.drix_status_gaso_data = df
-
-
-	# mpld3.save_html(fig,"drix_status_gasoline.html")
-	# mpld3.show()
+	return(fig)
 
 
 
 # = = = = = = = = = = = = = = = = = = = /d_phins/aipov  = = = = = = = = = = = = = = = = = = = = = = = =
 
-def plot_phins_curve(L,name, N_col = 5, save = False):
+def plot_phins(report_data, Data):
 
-	color10_16 = {'IdleBoot' : 'blue','Idle' : 'cyan','goto' : 'magenta','follow_me' : "#636efa",'box-in': "#00cc96","path_following" : "#EF553B","truc": 'brown'}
-	n = len(L)
-	N_col = 5
-	N_row = subplots_N_rows(n, N_col)
+	fig1 = plot_noisy_msg(Data.phins_raw['headingDeg'], Data.phins_raw['Time'],'Heading (deg)',100)
+	fig2 = plot_sawtooth_curve(Data.phins_raw['rollDeg'], Data.phins_raw['Time'],'Roll (deg)',100)
+	fig3 = plot_sawtooth_curve(Data.phins_raw['pitchDeg'], Data.phins_raw['Time'],'Pitch (deg)',100)
 
-	Title = []
-	for val in L:
-		Title.append(val[2])
-
-	fig = make_subplots(rows=N_row, cols=N_col, shared_xaxes=False,subplot_titles = Title, x_title = name)	
-	l = subplots_col_ligne(n, N_col, N_row)
-
-	for k in range(n):	
-		n_row,n_col = l[k]
-		fig1 = px.line(x = L[k][0], y =L[k][1] ,title = name+" curve", labels={ "x": "Date", "y": "Heading curve (deg)"})		
-		fig1.update_traces(line_color= color10_16[L[k][2]])
-		fig.add_trace(fig1["data"][0], row=n_row, col=n_col)
-
-	# fig.show()
-	if save == True:
-		fig.write_html("../IHM/phins/"+name+"_subplots.html")
-
-
-
-def plot_global_phins_curve(data, curve, name, save = False):
-
-	fig = px.scatter(data, x = 'Time', y = curve ,title = "name curve", color = "act_phins")
-	# fig.show()
-
-	if save == True:
-		fig.write_html("../IHM/phins/"+name+"_curve.html")
-		
-
+	ihm.ihm_phins(fig1,fig2,fig3)
 
 
 # = = = = = = = = = = = = = = =  /kongsberg_2040/kmstatus  = = = = = =  = = = = = = = = = = = = = = 
@@ -389,37 +324,39 @@ def plot_global_phins_curve(data, curve, name, save = False):
 
 def plot_telemetry(report_data, Data):
 
-	fig1 = plot_binary_msg(Data.telemetry_raw['is_drix_started'], Data.telemetry_raw['Time'],'Drix is started')
-	fig2 = plot_binary_msg(Data.telemetry_raw['is_navigation_lights_on'], Data.telemetry_raw['Time'],'Navigation lights')
-	fig3 = plot_binary_msg(Data.telemetry_raw['is_foghorn_on'], Data.telemetry_raw['Time'],'Foghorn')
-	fig4 = plot_binary_msg(Data.telemetry_raw['is_fans_on'], Data.telemetry_raw['Time'],'Fans')
-	fig5 = plot_binary_msg(Data.telemetry_raw['is_water_temperature_alarm_on'], Data.telemetry_raw['Time'],'Water temperature alarm')
-	fig6 = plot_binary_msg(Data.telemetry_raw['is_oil_pressure_alarm_on'], Data.telemetry_raw['Time'],'Oil pressure alarm')
-	fig7 = plot_binary_msg(Data.telemetry_raw['is_water_in_fuel_on'], Data.telemetry_raw['Time'],'Water in fuel')
-	fig8 = plot_binary_msg(Data.telemetry_raw['electronics_water_ingress'], Data.telemetry_raw['Time'],'Electronics water ingress')
-	fig9 = plot_binary_msg(Data.telemetry_raw['electronics_fire_on_board'], Data.telemetry_raw['Time'],'Electronics fire on board')
-	fig10 = plot_binary_msg(Data.telemetry_raw['engine_water_ingress'], Data.telemetry_raw['Time'],'Engine Water Ingress')
-	fig11 = plot_binary_msg(Data.telemetry_raw['engine_fire_on_board'], Data.telemetry_raw['Time'],'Engine fire on board')
+	y_binary_axis = {"vals":[0,1],"keys":["False","True"]}
+
+	fig1 = plot_data_reduced(Data.telemetry_raw['is_drix_started'], Data.telemetry_raw['Time'],'Drix is started',y_binary_axis)
+	fig2 = plot_data_reduced(Data.telemetry_raw['is_navigation_lights_on'], Data.telemetry_raw['Time'],'Navigation lights',y_binary_axis)
+	fig3 = plot_data_reduced(Data.telemetry_raw['is_foghorn_on'], Data.telemetry_raw['Time'],'Foghorn',y_binary_axis)
+	fig4 = plot_data_reduced(Data.telemetry_raw['is_fans_on'], Data.telemetry_raw['Time'],'Fans',y_binary_axis)
+	fig5 = plot_data_reduced(Data.telemetry_raw['is_water_temperature_alarm_on'], Data.telemetry_raw['Time'],'Water temperature alarm',y_binary_axis)
+	fig6 = plot_data_reduced(Data.telemetry_raw['is_oil_pressure_alarm_on'], Data.telemetry_raw['Time'],'Oil pressure alarm',y_binary_axis)
+	fig7 = plot_data_reduced(Data.telemetry_raw['is_water_in_fuel_on'], Data.telemetry_raw['Time'],'Water in fuel',y_binary_axis)
+	fig8 = plot_data_reduced(Data.telemetry_raw['electronics_water_ingress'], Data.telemetry_raw['Time'],'Electronics water ingress',y_binary_axis)
+	fig9 = plot_data_reduced(Data.telemetry_raw['electronics_fire_on_board'], Data.telemetry_raw['Time'],'Electronics fire on board',y_binary_axis)
+	fig10 = plot_data_reduced(Data.telemetry_raw['engine_water_ingress'], Data.telemetry_raw['Time'],'Engine Water Ingress',y_binary_axis)
+	fig11 = plot_data_reduced(Data.telemetry_raw['engine_fire_on_board'], Data.telemetry_raw['Time'],'Engine fire on board',y_binary_axis)
 
 	fig12 = plot_noisy_msg(Data.telemetry_raw['oil_pressure_Bar'], Data.telemetry_raw['Time'],'Oil Pressure (Bar)',100)
-	fig13 = plot_binary_msg(Data.telemetry_raw['engine_water_temperature_deg'], Data.telemetry_raw['Time'],'Engine water temperature (deg)',label_time = False)
-	fig14 = plot_binary_msg(Data.telemetry_raw['engineon_hours_h'], Data.telemetry_raw['Time'],'Engine on hours',label_time = False)
-	fig15 = plot_binary_msg(Data.telemetry_raw['main_battery_voltage_V'], Data.telemetry_raw['Time'],'Main battery voltage (V)',label_time = False)
-	fig16 = plot_binary_msg(Data.telemetry_raw['backup_battery_voltage_V'], Data.telemetry_raw['Time'],'Backup battery voltage (V)',label_time = False)
+	fig13 = plot_data_reduced(Data.telemetry_raw['engine_water_temperature_deg'], Data.telemetry_raw['Time'],'Engine water temperature (deg)',label_time = False)
+	fig14 = plot_data_reduced(Data.telemetry_raw['engineon_hours_h'], Data.telemetry_raw['Time'],'Engine on hours',label_time = False)
+	fig15 = plot_data_reduced(Data.telemetry_raw['main_battery_voltage_V'], Data.telemetry_raw['Time'],'Main battery voltage (V)',label_time = False)
+	fig16 = plot_data_reduced(Data.telemetry_raw['backup_battery_voltage_V'], Data.telemetry_raw['Time'],'Backup battery voltage (V)',label_time = False)
 	fig17 = plot_noisy_msg(Data.telemetry_raw['engine_battery_voltage_V'], Data.telemetry_raw['Time'],'Engine Battery Voltage (V)',100)
-	fig18 = plot_binary_msg(Data.telemetry_raw['percent_main_battery'], Data.telemetry_raw['Time'],'Main battery (%)',label_time = False)
-	fig19 = plot_binary_msg(Data.telemetry_raw['percent_backup_battery'], Data.telemetry_raw['Time'],'Backup battery (%)',label_time = False)
+	fig18 = plot_data_reduced(Data.telemetry_raw['percent_main_battery'], Data.telemetry_raw['Time'],'Main battery (%)',label_time = False)
+	fig19 = plot_data_reduced(Data.telemetry_raw['percent_backup_battery'], Data.telemetry_raw['Time'],'Backup battery (%)',label_time = False)
 
-	fig20 = plot_binary_msg(Data.telemetry_raw['consumed_current_main_battery_Ah'], Data.telemetry_raw['Time'],'Consumed current main battery (Ah)',label_time = False)
-	fig21 = plot_binary_msg(Data.telemetry_raw['consumed_current_backup_battery_Ah'], Data.telemetry_raw['Time'],'Consumed current backup battery (Ah)',label_time = False)
-	fig22 = plot_binary_msg(Data.telemetry_raw['current_main_battery_A'], Data.telemetry_raw['Time'],'Current Main Battery (A)',label_time = False)
-	fig23 = plot_binary_msg(Data.telemetry_raw['current_backup_battery_A'], Data.telemetry_raw['Time'],'Current Backup Battery (A)',label_time = False)
-	fig24 = plot_binary_msg(Data.telemetry_raw['time_left_main_battery_mins'], Data.telemetry_raw['Time'],'Time Left Main Battery (mins)',label_time = False)
-	fig25 = plot_binary_msg(Data.telemetry_raw['time_left_backup_battery_mins'], Data.telemetry_raw['Time'],'Time Left Backup Battery (mins)',label_time = False)
+	fig20 = plot_data_reduced(Data.telemetry_raw['consumed_current_main_battery_Ah'], Data.telemetry_raw['Time'],'Consumed current main battery (Ah)',label_time = False)
+	fig21 = plot_data_reduced(Data.telemetry_raw['consumed_current_backup_battery_Ah'], Data.telemetry_raw['Time'],'Consumed current backup battery (Ah)',label_time = False)
+	fig22 = plot_data_reduced(Data.telemetry_raw['current_main_battery_A'], Data.telemetry_raw['Time'],'Current Main Battery (A)',label_time = False)
+	fig23 = plot_data_reduced(Data.telemetry_raw['current_backup_battery_A'], Data.telemetry_raw['Time'],'Current Backup Battery (A)',label_time = False)
+	fig24 = plot_data_reduced(Data.telemetry_raw['time_left_main_battery_mins'], Data.telemetry_raw['Time'],'Time Left Main Battery (mins)',label_time = False)
+	fig25 = plot_data_reduced(Data.telemetry_raw['time_left_backup_battery_mins'], Data.telemetry_raw['Time'],'Time Left Backup Battery (mins)',label_time = False)
 	fig26 = plot_noisy_msg(Data.telemetry_raw['electronics_temperature_deg'], Data.telemetry_raw['Time'],'Electronics Temperature (deg)',100)
 	fig27 = plot_noisy_msg(Data.telemetry_raw['electronics_hygrometry_percent'], Data.telemetry_raw['Time'],'Electronics Hygrometry (%)',100)
-	fig28 = plot_binary_msg(Data.telemetry_raw['engine_temperature_deg'], Data.telemetry_raw['Time'],'Engine Temperature (deg)',label_time = False)
-	fig29 = plot_binary_msg(Data.telemetry_raw['engine_hygrometry_percent'], Data.telemetry_raw['Time'],'Engine Hygrometry (%)',label_time = False)
+	fig28 = plot_data_reduced(Data.telemetry_raw['engine_temperature_deg'], Data.telemetry_raw['Time'],'Engine Temperature (deg)',label_time = False)
+	fig29 = plot_data_reduced(Data.telemetry_raw['engine_hygrometry_percent'], Data.telemetry_raw['Time'],'Engine Hygrometry (%)',label_time = False)
 
 	
 	ihm.ihm_telemetry(fig1,fig2,fig3,fig4,fig5,fig6,fig7,fig8,fig9,fig10,fig11,fig12,fig13,fig14,fig15,fig16,fig17,fig18,fig19,fig20,fig21,fig22,fig23,fig24,fig25,fig26,fig27,fig28,fig29)
@@ -433,7 +370,7 @@ def plot_gpu_state(report_data, Data):
 	fig1 = plot_noisy_msg(Data.gpu_state_raw['temperature_deg_c'], Data.gpu_state_raw['Time'],'GPU Temperature (deg)',60)
 	fig2 = plot_sawtooth_curve(Data.gpu_state_raw['gpu_utilization_percent'], Data.gpu_state_raw['Time'],'GPU Utilization (deg)',10)
 	fig3 = plot_sawtooth_curve(Data.gpu_state_raw['mem_utilization_percent'], Data.gpu_state_raw['Time'],'GPU memory utilization (%)',20)
-	fig4 = plot_binary_msg(Data.gpu_state_raw['total_mem_GB'], Data.gpu_state_raw['Time'],'GPU Total Memory (GB)',label_time = False)
+	fig4 = plot_data_reduced(Data.gpu_state_raw['total_mem_GB'], Data.gpu_state_raw['Time'],'GPU Total Memory (GB)',label_time = False)
 	fig5 = plot_noisy_msg(Data.gpu_state_raw['power_consumption_W'], Data.gpu_state_raw['Time'],'GPU Power Consumption (W)',10)
 	fig6 = plot_sawtooth_curve(Data.gpu_state_raw['power_consumption_W'], Data.gpu_state_raw['Time'],'GPU Power Consumption (W)',60)
 
@@ -445,11 +382,11 @@ def plot_gpu_state(report_data, Data):
 
 def plot_trimmer_status(report_data, Data):
 
-	fig1 = plot_binary_msg(Data.trimmer_status_raw['primary_powersupply_consumption_A'], Data.trimmer_status_raw['Time'],'Primary Powersupply Consumption (A)',label_time = False)
-	fig2 = plot_binary_msg(Data.trimmer_status_raw['secondary_powersupply_consumption_A'], Data.trimmer_status_raw['Time'],'Secondary Powersupply Consumption (A)',label_time = False)
+	fig1 = plot_data_reduced(Data.trimmer_status_raw['primary_powersupply_consumption_A'], Data.trimmer_status_raw['Time'],'Primary Powersupply Consumption (A)',label_time = False)
+	fig2 = plot_data_reduced(Data.trimmer_status_raw['secondary_powersupply_consumption_A'], Data.trimmer_status_raw['Time'],'Secondary Powersupply Consumption (A)',label_time = False)
 	fig3 = plot_noisy_msg(Data.trimmer_status_raw['motor_temperature_degC'], Data.trimmer_status_raw['Time'],'Motor Temperature (deg)',500)
 	fig4 = plot_noisy_msg(Data.trimmer_status_raw['pcb_temperature_degC'], Data.trimmer_status_raw['Time'],'PCB Temperature (deg)',400)
-	fig5 = plot_binary_msg(Data.trimmer_status_raw['relative_humidity_percent'], Data.trimmer_status_raw['Time'],'Relative Humidity (%)', label_time = False)
+	fig5 = plot_data_reduced(Data.trimmer_status_raw['relative_humidity_percent'], Data.trimmer_status_raw['Time'],'Relative Humidity (%)', label_time = False)
 
 	ihm.ihm_trimmer_status(fig1,fig2,fig3,fig4,fig5)
 
@@ -478,12 +415,14 @@ def plot_centered_sawtooth_curve(list_msg,list_te, Title = 'Binary MSG', n = 10)
 	ax.plot(Lx,Ly_max,'black')
 
 	print(Title,"taille ",len(Lx))
-	mpld3.show()
+	# mpld3.show()
 
 	plt.close()
 
 	return(fig)
 
+
+# - - - - - - - - - - - - 
 
 
 def plot_sawtooth_curve(list_msg,list_te, Title = 'Binary MSG', n = 10): # plot the mean curve, the max curve, the min curve 
@@ -511,15 +450,14 @@ def plot_sawtooth_curve(list_msg,list_te, Title = 'Binary MSG', n = 10): # plot 
 	ax.plot(Lx,Ly_min,'black')
 
 	print(Title,"taille ",len(Lx))
-	mpld3.show()
+	# mpld3.show()
 
 	plt.close()
 
 	return(fig)
 
 
-
-
+# - - - - - - - - - - - - 
 
 
 def plot_noisy_msg(list_msg,list_te, Title = 'Binary MSG', n = 10): # data fltering with the mean each n values 
@@ -548,27 +486,23 @@ def plot_noisy_msg(list_msg,list_te, Title = 'Binary MSG', n = 10): # data flter
 	ax.plot(Lx,Ly,'blue')
 
 	print(Title, "taille ",len(Lx))
-	mpld3.show()
+	# mpld3.show()
 
 	plt.close()
 
 	return(fig)
 
 
+# - - - - - - - - - - - - 
 
-def plot_binary_msg(list_msg,list_te, Title = 'Binary MSG', label_time = True): 
 
-	fig, ax = plt.subplots()
-
-	list_t = [str(k.strftime('%H:%M')) for k in list_te]
-
-	list_index = xlabel_list(list_t, c = 10)
+def data_reduction(list_msg, list_t_raw, list_index, label_time = True): # Selects data only when there is a changing value
 
 	Ly = [list_msg[0]]
 	Lx = [list_index[0]]
 
 	if label_time:
-		labels = [str(list_t[0])]
+		labels = [str(list_t_raw[0])]
 
 	else: 
 		labels = [list_msg[0]]
@@ -576,60 +510,80 @@ def plot_binary_msg(list_msg,list_te, Title = 'Binary MSG', label_time = True):
 	x = [list_msg[0]]
 	y = [list_index[0]]
 
+
 	for k in range(1,len(list_msg)):
 
 		if list_msg[k] != Ly[-1]:
 
 			Ly.append(list_msg[k-1])
-			Lx.append(list_index[k-1])
-
 			Ly.append(list_msg[k])
+
+			Lx.append(list_index[k-1])
 			Lx.append(list_index[k])
 
 			if label_time:
-				labels.append(str(list_te[k].strftime('%H:%M:%S')))
-				labels.append(str(list_te[k - 1].strftime('%H:%M:%S')))
+				labels.append(str(list_t_raw[k - 1].strftime('%H:%M:%S')))
+				labels.append(str(list_t_raw[k].strftime('%H:%M:%S')))
 				
 			else:
-				labels.append(list_msg[k])
-				labels.append(list_msg[k - 1]) 
+				labels.append(list_msg[k - 1])
+				labels.append(list_msg[k]) 
 				
+
 	Ly.append(list_msg[len(list_msg)-1])
 	Lx.append(list_index[len(list_index)-1])
 
+	x.append(list_msg[len(list_msg)-1])
+	y.append(list_index[len(list_index)-1])
+	
 	if label_time:
-		labels.append(str(list_t[-1]))
+		labels.append(str(list_t_raw[len(list_t_raw)-1]))
 	else:
 		labels.append(list_msg[len(list_msg)-1]) 
 
-	x.append(list_msg[len(list_msg)-1])
-	y.append(list_index[len(list_index)-1])
 
+	return(Lx, Ly, x, y, labels)
+
+
+
+# - - - - - - - - - - - - 
+
+
+def plot_data_reduced(list_msg, list_t_raw, Title, y_axis={"vals":[],"keys":[]}, height = 2, width = 18,label_time = True):
+
+	fig, ax = plt.subplots()
+
+	# - - - Data Recovery - - -
+
+	list_t = [str(k.strftime('%H:%M')) for k in list_t_raw]
+	list_index = xlabel_list(list_t, c = 10) # for display hours in the x axis
+
+	Lx, Ly, x, y, labels = data_reduction(list_msg,list_t_raw,list_index,label_time) 
+
+	# - - - Plot Creation - - -
 
 	ax.plot(Lx,Ly,'blue')
-	points = ax.scatter(Lx,Ly, s = 8, alpha = 0.)
-
+	points = ax.scatter(Lx,Ly, s = 20, alpha = 0.)
 	tooltip = plugins.PointHTMLTooltip(points, labels)
-
 	plugins.connect(fig, tooltip)
 
 	ax.set_ylim(np.min(Ly) - 1, np.max(Ly) + 1)
-
-
-	fig.set_figheight(2)
-	fig.set_figwidth(18)
-
+	fig.set_figheight(height)
+	fig.set_figwidth(width)
 	plt.title(Title)
 
+	if y_axis["vals"]:
+		plt.yticks(y_axis["vals"],y_axis["keys"])
+
 	print(Title,"taille ",len(Lx))
-	# mpld3.save_html(fig,"BinaryMSG.html")
-	mpld3.show()
 
+	# mpld3.show()
 	plt.close()
-
 
 	return(fig)
 
+
+# - - - - - - - - - - - - 
 
 
 def subplots_N_rows(n_data, n_col):
@@ -643,6 +597,9 @@ def subplots_col_ligne(n_data,n_col,n_row):
 		col = k%n_col + 1
 		l.append([row,col])
 	return(l)
+
+
+# - - - - - - - - - - - - 
 
 
 def xlabel_list(Lx, c = 10): # c is the labels number   
@@ -667,6 +624,9 @@ def xlabel_list(Lx, c = 10): # c is the labels number
 	t = np.linspace(a,b,c)
 
 	return(t)
+
+
+# - - - - - - - - - - - - 
 
 
 def filter_binary_msg(data, condition): # report the times (start and end) when the condition is fulfilled

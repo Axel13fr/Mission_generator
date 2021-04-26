@@ -162,7 +162,7 @@ class Drix_data(object):
                 index_act += 1
 
             dic_gps = {'Time_raw':[],'Time':[],'Time_str':[],'latitude':[],'longitude':[],'action_type':[],'action_type_index':[],'fix_quality':[],'list_x':[],'list_y':[]}
-            dic_drix_status = {'Time_raw':[],'Time':[],'Time_str':[],'gasolineLevel_percent':[],'drix_mode':[],'emergency_mode':[],'remoteControlLost':[],'shutdown_requested':[],'reboot_requested':[],'thruster_RPM':[],'rudderAngle_deg':[],'drix_clutch':[]}
+            dic_drix_status = {'Time_raw':[],'Time':[],'Time_str':[],'gasolineLevel_percent':[],'drix_mode':[],'emergency_mode':[],"drix_clutch":[],'remoteControlLost':[],"keel_state":[],'shutdown_requested':[],'reboot_requested':[],'thruster_RPM':[],'rudderAngle_deg':[]}
             dic_phins = {'Time_raw':[],'Time':[],'Time_str':[],'headingDeg':[],'rollDeg':[],'pitchDeg':[],'latitudeDeg':[],'longitudeDeg':[]}
             dic_telemetry = {'Time_raw':[],'Time':[],'Time_str':[],'is_drix_started':[],'is_navigation_lights_on':[],'is_foghorn_on':[],'is_fans_on':[], 'oil_pressure_Bar':[],'engine_water_temperature_deg':[],'is_water_temperature_alarm_on':[],'is_oil_pressure_alarm_on':[],'is_water_in_fuel_on':[],'engineon_hours_h':[],'main_battery_voltage_V':[],'backup_battery_voltage_V':[],'engine_battery_voltage_V':[],'percent_main_battery':[],'percent_backup_battery':[],
             'consumed_current_main_battery_Ah':[],'consumed_current_backup_battery_Ah':[],'current_main_battery_A':[],'current_backup_battery_A':[],'time_left_main_battery_mins':[],'time_left_backup_battery_mins':[],'electronics_temperature_deg':[],'electronics_hygrometry_percent':[],'electronics_water_ingress':[],'electronics_fire_on_board':[],'engine_temperature_deg':[],'engine_hygrometry_percent':[],'engine_water_ingress':[],'engine_fire_on_board':[]}
@@ -203,15 +203,17 @@ class Drix_data(object):
                         dic_drix_status['Time_raw'].append(time_raw)
                         dic_drix_status['Time'].append(time)
                         dic_drix_status['Time_str'].append(time_str)
+                        dic_drix_status['thruster_RPM'].append(m.thruster_RPM)
+                        dic_drix_status['rudderAngle_deg'].append(m.rudderAngle_deg)
                         dic_drix_status['gasolineLevel_percent'].append(m.gasolineLevel_percent)
                         dic_drix_status['drix_mode'].append(m.drix_mode)
                         dic_drix_status['emergency_mode'].append(m.emergency_mode)
+                        dic_drix_status['drix_clutch'].append(m.drix_clutch)
                         dic_drix_status['remoteControlLost'].append(m.remoteControlLost)
+                        dic_drix_status['keel_state'].append(m.keel_state)
                         dic_drix_status['shutdown_requested'].append(m.shutdown_requested)
                         dic_drix_status['reboot_requested'].append(m.reboot_requested)
-                        dic_drix_status['thruster_RPM'].append(m.thruster_RPM)
-                        dic_drix_status['rudderAngle_deg'].append(m.rudderAngle_deg)
-                        dic_drix_status['drix_clutch'].append(m.drix_clutch)
+                        
 
 
                     if topic == '/d_phins/aipov':
@@ -533,12 +535,11 @@ if __name__ == '__main__':
     # report_data.collect_drix_status_binary_msg(Data)
     # - - -
 
-
     # Disp.plot_gps(report_data, Data)
 
+    # Disp.plot_phins(report_data, Data)
 
     # Disp.plot_drix_status(report_data,Data)
-
 
     # Disp.plot_telemetry(report_data, Data)
 
@@ -548,7 +549,7 @@ if __name__ == '__main__':
 
     # IHM.generate_ihm(report_data)
 
-    Disp.plot_drix_status(report_data, Data)
+    # Disp.plot_drix_status(report_data, Data)
 
 
 

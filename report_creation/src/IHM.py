@@ -141,8 +141,73 @@ def display_date(date):
 # 	return(l2[1])
 
 
-
 def generate_ihm(report_data):
+
+	a = Airium()
+
+	a('<!DOCTYPE html>')
+	with a.html(lang="pl"):
+		with a.head():
+			a.meta(charset="utf-8")
+			a.title(_t="Mission Report")
+
+		with a.body():
+			with a.h1(id="id23409231", klass='main_header'):
+				a("Mission Report")
+
+			with a.p():
+				a("Drix mission between "+ display_date(report_data.date_d)+" and "+ display_date(report_data.date_f))
+				a(" ")
+				a(" ")
+
+			with a.h2(id="id23409231", klass='main_header'):
+
+				a("Gps data : "+"<a href = ../IHM/gps/Bilan_gps.html>Raw</a>"+'<br>')
+				a(" ")
+
+			with a.h2(id="id23409231", klass='main_header'):
+
+				a("Gps data : "+"<a href = ../IHM/drix_status/Bilan_drix_status.html>Raw</a>"+" | "+"<a href = ../IHM/drix_status/Bilan_drix_status_orig.html>processed</a>"+'<br>')
+				a(" ")				
+
+
+			with a.h2(id="id23409231", klass='main_header'):
+
+				a("Gps data : "+"<a href = ../IHM/telemetry/Bilan_telemetry.html>Raw</a>"+" | "+"<a href = ../IHM/telemetry/Bilan_telemetry_orig.html>processed</a>"+'<br>')
+				a(" ")
+
+
+			with a.h2(id="id23409231", klass='main_header'):
+
+				a("Gps data : "+"<a href = ../IHM/gpu_state/Bilan_gpu_state.html>Raw</a>"+" | "+"<a href = ../IHM/gpu_state/Bilan_gpu_state_orig.html>processed</a>"+'<br>')
+				a(" ")
+
+
+			with a.h2(id="id23409231", klass='main_header'):
+
+				a("Gps data : "+"<a href = ../IHM/phins/Bilan_phins.html>Raw</a>"+" | "+"<a href = ../IHM/phins/Bilan_phins_orig.html>processed</a>"+'<br>')
+				a(" ")
+
+
+			with a.h2(id="id23409231", klass='main_header'):
+				
+				a("Gps data : "+"<a href = ../IHM/trimmer_status/Bilan_trimmer_status.html>Raw</a>"+" | "+"<a href = ../IHM/trimmer_status/Bilan_trimmer_status.html>processed</a>"+'<br>')
+
+
+
+
+	html = str(a) # casting to string extracts the value
+
+	# print(html)
+
+	with open('../IHM/Mission_report.html', 'w') as f:
+		 f.write(str(html))
+
+
+# - - - - - - - - - - - - - 
+
+
+def generate_ihm_past(report_data):
 
 	a = Airium()
 
@@ -291,12 +356,76 @@ def generate_ihm(report_data):
 		 f.write(str(html))
 
 
+# = = = = = = = = = = = = = = = = = = /gps  = = = = = = = = = = = = = = = = = = = = = = = = = 
+
+def ihm_gps(fig1,fig2,fig3,fig4):
+
+	a = Airium()
+
+	a('<!DOCTYPE html>')
+	with a.html(lang="pl"):
+		with a.head():
+			a.meta(charset="utf-8")
+			a.title(_t="Bilan GPS")
+
+		with a.body():
+			with a.h1(id="id23409231", klass='main_header'):
+				a("Drix GPS Graphs")
+
+			with a.p():
+			 	a(mpld3.fig_to_html(fig1))
+			 	a(mpld3.fig_to_html(fig2))
+			 	a(mpld3.fig_to_html(fig3))
+			 	a(mpld3.fig_to_html(fig4))
+
+
+	html = str(a) # casting to string extracts the value
+
+	with open('../IHM/gps/Bilan_gps.html', 'w') as f:
+		 f.write(str(html))
+
+
+# = = = = = = = = = = = = = = = = = = /drix_status  = = = = = = = = = = = = = = = = = = = = = = = = = 
+
+
+def ihm_drix_status(fig1,fig2,fig3,fig4,fig5,fig6,fig7,fig8,fig9,fig10):
+
+	a = Airium()
+
+	a('<!DOCTYPE html>')
+	with a.html(lang="pl"):
+		with a.head():
+			a.meta(charset="utf-8")
+			a.title(_t="Bilan Drix Status")
+
+		with a.body():
+			with a.h1(id="id23409231", klass='main_header'):
+				a("Drix Status Graphs")
+
+			with a.p():
+			 	a(mpld3.fig_to_html(fig1))
+			 	a(mpld3.fig_to_html(fig2))
+			 	a(mpld3.fig_to_html(fig3))
+			 	a(mpld3.fig_to_html(fig4))
+			 	a(mpld3.fig_to_html(fig5))
+			 	a(mpld3.fig_to_html(fig6))
+			 	a(mpld3.fig_to_html(fig7))
+			 	a(mpld3.fig_to_html(fig8))
+			 	a(mpld3.fig_to_html(fig9))
+			 	a(mpld3.fig_to_html(fig10))
+
+
+	html = str(a) # casting to string extracts the value
+
+
+	with open('../IHM/drix_status/Bilan_drix_status.html', 'w') as f:
+		 f.write(str(html))
+
 
 # = = = = = = = = = = = = = = = = = = /Telemetry2  = = = = = = = = = = = = = = = = = = = = = = = = = 
 
 
 def ihm_telemetry(fig1,fig2,fig3,fig4,fig5,fig6,fig7,fig8,fig9,fig10,fig11,fig12,fig13,fig14,fig15,fig16,fig17,fig18,fig19,fig20,fig21,fig22,fig23,fig24,fig25,fig26,fig27,fig28,fig29):
-
 
 	a = Airium()
 
@@ -352,7 +481,8 @@ def ihm_telemetry(fig1,fig2,fig3,fig4,fig5,fig6,fig7,fig8,fig9,fig10,fig11,fig12
 	html = str(a) # casting to string extracts the value
 
 
-	with open('../IHM/telemetry/Bilan_binaryMSG.html', 'w') as f:
+	# with open('../IHM/telemetry/Bilan_telemetry_orig.html', 'w') as f:
+	with open('../IHM/telemetry/Bilan_telemetry.html', 'w') as f:
 		 f.write(str(html))
 
 
@@ -387,6 +517,34 @@ def ihm_gpu_state(fig1,fig2,fig3,fig4,fig5,fig6):
 	with open('../IHM/gpu_state/Bilan_gpu_state.html', 'w') as f:
 		 f.write(str(html))
 
+
+
+# = = = = = = = = = = = = = = = = = = /phins_curve  = = = = = = = = = = = = = = = = = = = = = = = = = 
+
+
+def ihm_phins(fig1,fig2,fig3):
+	a = Airium()
+
+	a('<!DOCTYPE html>')
+	with a.html(lang="pl"):
+		with a.head():
+			a.meta(charset="utf-8")
+			a.title(_t="Bilan Phins Curves")
+
+		with a.body():
+			with a.h1(id="id23409231", klass='main_header'):
+				a("Phins Graphs")
+
+			with a.p():
+			 	a(mpld3.fig_to_html(fig1))
+			 	a(mpld3.fig_to_html(fig2))
+			 	a(mpld3.fig_to_html(fig3))
+
+	html = str(a) # casting to string extracts the value
+
+	with open('../IHM/phins/Bilan_phins.html', 'w') as f:
+	# with open('../IHM/phins/Bilan_phins_orig.html', 'w') as f:
+		 f.write(str(html))
 
 
 # = = = = = = = = = = = = = = = = = = /gpu_state  = = = = = = = = = = = = = = = = = = = = = = = = = 

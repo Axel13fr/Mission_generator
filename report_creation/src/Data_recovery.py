@@ -23,7 +23,10 @@ from drix_msgs.msg import TrimmerStatus
 from drix_msgs.msg import DrixOutput # drix_status
 from d_phins.msg import Aipov
 
+from drix_msgs.msg import AutopilotOutput
+
 from ds_kongsberg_msgs.msg import KongsbergStatus
+from d_iridium.msg import IridiumStatus
 
 
 
@@ -103,7 +106,7 @@ class Drix_data(object):
 
     def __init__(self,L_bags):
 
-        self.list_topics = ['/gps', '/kongsberg_2040/kmstatus','/drix_status','/telemetry2','/d_phins/aipov','/mothership_gps','/rc_command','/gpu_state','/trimmer_status']
+        self.list_topics = ['/gps', '/kongsberg_2040/kmstatus','/drix_status','/telemetry2','/d_phins/aipov','/mothership_gps','/rc_command','/gpu_state','/trimmer_status','/d_iridium/iridium_status','/autopilot_node/ixblue_autopilot/autopilot_output']
         # self.list_topics = ['/gps','/telemetry2']
 
         # - - - Raw data - - - 
@@ -116,6 +119,8 @@ class Drix_data(object):
         self.rc_command_raw = None 
         self.gpu_state_raw = None
         self.trimmer_status_raw = None
+        self.iridium_status_raw = None 
+        self.autopilot_raw = None
 
         # - - - Undersampled data - - -
         self.gps_UnderSamp_d = None # Under distance sampling
@@ -147,6 +152,8 @@ class Drix_data(object):
         rc_command_pd = []
         gpu_state_pd = []
         trimmer_status_pd = []
+        iridium_status_pd = []
+        autopilot_pd = []
 
         index = 0
         index_act = 0
@@ -171,6 +178,8 @@ class Drix_data(object):
             dic_gpu_state = {'Time_raw':[],'Time':[],'Time_str':[],'temperature_deg_c':[],"gpu_utilization_percent":[],"mem_utilization_percent":[],"used_mem_GB":[],"total_mem_GB":[],"power_consumption_W":[]}
             dic_trimmer_status = {'Time_raw':[],'Time':[],'Time_str':[],"primary_powersupply_consumption_A":[],"secondary_powersupply_consumption_A":[],"motor_temperature_degC":[],"pcb_temperature_degC":[],"relative_humidity_percent":[],"position_deg":[]}
             dic_kongsberg_status = {'Time_raw' : [],'pu_powered' : [],'pu_connected' : [],'position_1' : []}
+            dic_iridium_status = {'Time_raw':[],'Time':[],'Time_str':[],'is_iridium_link_ok':[],"signal_strength": [],"registration_status": [],"mo_status_code": [],"mo_status": [],"last_mo_msg_sequence_number": [],"mt_status_code": [],"mt_status": [],"mt_msg_sequence_number": [],"mt_length": [],"gss_queued_msgs": [],"cmd_queue": [],"failed_transaction_percent": []}
+            dic_autopilot = {'Time_raw':[],'Time':[],'Time_str':[],'ActiveSpeed':[],'Speed':[], 'Delta' : [],'Regime':[],'yawRate':[]}
 
             bag = rosbag.Bag(bagfile.bag_path)
 
@@ -343,6 +352,39 @@ class Drix_data(object):
                         dic_kongsberg_status['pu_connected'].append(m.pu_connected)
                         dic_kongsberg_status['position_1'].append(m.position_1)
 
+
+                    if topic == '/d_iridium/iridium_status':
+                        m:IridiumStatus = msg
+                        dic_iridium_status['Time_raw'].append(time_raw)
+                        dic_iridium_status['Time'].append(time)
+                        dic_iridium_status['Time_str'].append(time_str) 
+                        dic_iridium_status['is_iridium_link_ok'].append(m.is_iridium_link_ok)
+                        dic_iridium_status['signal_strength'].append(m.signal_strength)
+                        dic_iridium_status['registration_status'].append(m.registration_status)
+                        dic_iridium_status['mo_status_code'].append(m.mo_status_code)
+                        dic_iridium_status['mo_status'].append(m.mo_status)
+                        dic_iridium_status['last_mo_msg_sequence_number'].append(m.last_mo_msg_sequence_number)
+                        dic_iridium_status['mt_status_code'].append(m.mt_status_code)
+                        dic_iridium_status['mt_status'].append(m.mt_status)
+                        dic_iridium_status['mt_msg_sequence_number'].append(m.mt_msg_sequence_number)
+                        dic_iridium_status['mt_length'].append(m.mt_length)
+                        dic_iridium_status['gss_queued_msgs'].append(m.gss_queued_msgs)
+                        dic_iridium_status['cmd_queue'].append(m.cmd_queue)
+                        dic_iridium_status['failed_transaction_percent'].append(m.failed_transaction_percent)
+
+
+                    if topic == '/autopilot_node/ixblue_autopilot/autopilot_output':
+                        m:AutopilotOutput = msg 
+                        dic_autopilot['Time_raw'].append(time_raw)
+                        dic_autopilot['Time'].append(time)
+                        dic_autopilot['Time_str'].append(time_str) 
+                        dic_autopilot['ActiveSpeed'].append(m.ActiveSpeed)
+                        dic_autopilot['Speed'].append(m.Speed)
+                        dic_autopilot['Delta'].append(m.Delta)
+                        dic_autopilot['Regime'].append(m.Regime)
+                        dic_autopilot['yawRate'].append(m.yawRate)
+
+
             print('Import rosbag : ',index,'/',len(L_bags))
 
             # - - - - - - - - - - - -
@@ -373,6 +415,13 @@ class Drix_data(object):
 
             if dic_trimmer_status['Time_raw']:
                 trimmer_status_pd.append(pd.DataFrame.from_dict(dic_trimmer_status))
+
+            if dic_iridium_status['Time_raw']:
+                iridium_status_pd.append(pd.DataFrame.from_dict(dic_iridium_status))
+
+            if dic_autopilot['Time_raw']:
+                autopilot_pd.append(pd.DataFrame.from_dict(dic_autopilot))
+
 
         # - - - - - - - - - - - - - - - - - - 
 
@@ -446,6 +495,26 @@ class Drix_data(object):
 
         else:
             print('Error, no Trimmer Status data found')
+
+
+        if len(iridium_status_pd) > 0:
+            self.iridium_status_raw = pd.concat(iridium_status_pd, ignore_index=True)
+            print('Iridium Status data imported ',len(iridium_status_pd),'/',len(L_bags))
+
+        else:
+            print('Error, no Iridium Status data found')
+
+
+
+        if len(autopilot_pd) > 0:
+            self.autopilot_raw = pd.concat(autopilot_pd, ignore_index=True)
+            print('Autopilot output data imported ',len(autopilot_pd),'/',len(L_bags))
+
+        else:
+            print('Error, no Autopilot output data found')
+
+
+             
 
 
 # -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
@@ -530,12 +599,14 @@ if __name__ == '__main__':
     report_data = IHM.Report_data(date_d, date_f) # class to transport data to the ihm
 
 
-    # report_data.msg_gps = Dp.MSG_gps(Data)
+    report_data.msg_gps = Dp.MSG_gps(Data)
     # # - - -
     # report_data.collect_drix_status_binary_msg(Data)
     # - - -
 
     # Disp.plot_gps(report_data, Data)
+
+    # Dp.add_dist_mothership_drix(Data)
 
     # Disp.plot_phins(report_data, Data)
 
@@ -547,122 +618,14 @@ if __name__ == '__main__':
 
     # Disp.plot_trimmer_status(report_data, Data)
 
-    # IHM.generate_ihm(report_data)
-
     # Disp.plot_drix_status(report_data, Data)
 
+    # Disp.plot_iridium_status(report_data, Data)
 
+    # Disp.plot_autopilot
 
-
-
-
-
-
+    IHM.generate_ihm(report_data)
 
     # [...]
-
-
-
-    # L_emergency_mode = Dp.filter_binary_msg(Data.telemetry_raw,'is_water_in_fuel_on == False')
-
-
-    # ind_list = [0,1,2,3,5,10,129]
-    # df = Data.gps_pd.iloc[ind_list,:].reset_index()
-
-    # # dff = df
-    # print(df)
-
-
-    # -------------------------------------------
-    # - - - - - - Data Processing - - - - - - -
-    # ------------------------------------------- 
-
-    # - - GPS - -
-    # GPS_data,gps_data_diag,L_gps = Dp.gps_data(L_bags)
-
-    
-    # # - - Drix_status - -
-    # Drix_status_data = Dp.drix_status_data(L_bags)
-    # data_status_smooth = Dp.filter_gasolineLevel(Drix_status_data)
-
-
-    # # - - Phins - - -
-    # Phins_data, dic,dic_L = Dp.drix_phins_data(L_bags,gps_data_diag) # Needs list_act and list_start_t of gps_data_diag
-    
-
-
-    # # - - kongsberg_status - -
-    # Drix_kongsberg_status_data = Dp.drix_kongsberg_data(L_bags)
-
-
-    # # - - diagnostics - -
-    # diag_data = Dp.drix_diagnostics_data(L_bags)
-
-
-    # # - - Telemetry - -
-    # telemetry_data = Dp.drix_telemetry_data(L_bags)
-
-  
-    # # - - mothership_gps - -
-    # mothership_gps_data = Dp.drix_mothership_gps_data(L_bags)
-    # GPS_data = Dp.add_dist_mothership_drix(GPS_data,mothership_gps_data)
-
-
-
-    # -------------------------------------------
-    # - - - - - - Data Visualization - - - - - -
-    # -------------------------------------------
-
-    # - - GPS - -
-    # Disp.plot_gps(GPS_data,gps_data_diag,True)
-
-
-    # # - - Drix_status - -
-    # Disp.plot_drix_status(data_status_smooth, Drix_status_data, True)
-    
-    # L_emergency_mode = Dp.filter_binary_msg(Drix_status_data,'emergency_mode == True')
-    # L_rm_ControlLost = Dp.filter_binary_msg(Drix_status_data,'remoteControlLost == True')
-    # L_shutdown_req = Dp.filter_binary_msg(Drix_status_data,'shutdown_requested == True')
-    # L_reboot_req = Dp.filter_binary_msg(Drix_status_data,'reboot_requested == True')
-    # # L_drix_mode = Dp.filter_binary_msg(Drix_status_data,'reboot_requested == True')
-    # # L_drix_clutch = Dp.filter_binary_msg(Drix_status_data,'reboot_requested == True')
-
-
-    # # - - Phins - -
-    # Disp.plot_phins_curve(dic_L["L_heading"],'heading',save = True)
-    # Disp.plot_phins_curve(dic_L["L_pitch"],'pitch',save = True)
-    # Disp.plot_phins_curve(dic_L["L_roll"],'roll',save = True)
-    # Disp.plot_global_phins_curve(Phins_data, 'headingDeg', 'heading', save = True)
-    # Disp.plot_global_phins_curve(Phins_data, 'pitchDeg', 'pitch', save = True)
-    # Disp.plot_global_phins_curve(Phins_data, 'rollDeg', 'roll', save = True)
-
-
-    # # - - Telemetry - -
-    # # Disp.plot_telemetry(telemetry_data)
-
-
-
-
-    # # -------------------------------------------
-    # # - - - - - - Report Creation - - - - - - -
-    # # -------------------------------------------
-
-    # report_data = IHM.Report_data(date_d, date_f) # class to transport data to the ihm
-
-    # report_data.dist = L_gps[0]
-    # report_data.avg_speed = L_gps[1]
-    # report_data.avg_speed_n = L_gps[2]
-
-    # report_data.L_emergency_mode = L_emergency_mode
-    # report_data.L_rm_ControlLost = L_rm_ControlLost
-    # report_data.L_shutdown_req = L_shutdown_req
-    # report_data.L_reboot_req = L_reboot_req
-
-    # report_data.data_phins = dic
-
-    # # - - - - -
-
-    # IHM.generate_ihm(report_data)
-
 
 

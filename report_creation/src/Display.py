@@ -242,12 +242,15 @@ def plot_drix_mode(Data, Title='Drix Mode'):
 	encoder_dic = {"DOCKING":0,"MANUAL":1,"AUTO":2}
 
 	label_names_unique = Data.drix_status_raw['drix_mode'].unique()
-	y_axis = {"vals":list(encoder_dic.values()),"keys":list(encoder_dic.keys())}
 
+	cmt = 1
 	for val in label_names_unique:
-		if val not in y_axis["keys"]:
+		if val not in list(encoder_dic.keys()):
 			print("Unknown drix mode :",val)
+			encoder_dic[val] = -cmt
+			cmt +=1
 
+	y_axis = {"vals":list(encoder_dic.values()),"keys":list(encoder_dic.keys())}
 
 	list_msg = [encoder_dic[val] for val in Data.drix_status_raw['drix_mode']]
 
@@ -265,12 +268,15 @@ def plot_drix_clutch(Data, Title='Drix Clutch'): # same operation as plot_drix_m
 	encoder_dic = {"FORWARD":0,"NEUTRAL":1,"BACKWARD":2,"ERROR":4}
 
 	label_names_unique = Data.drix_status_raw['drix_clutch'].unique()
-	y_axis = {"vals":list(encoder_dic.values()),"keys":list(encoder_dic.keys())}
 
+	cmt = 1
 	for val in label_names_unique:
-		if val not in y_axis["keys"]:
+		if val not in list(encoder_dic.keys()):
 			print("Unknown drix clutch :",val)
+			encoder_dic[val] = -cmt
+			cmt +=1
 
+	y_axis = {"vals":list(encoder_dic.values()),"keys":list(encoder_dic.keys())}
 
 	list_msg = [encoder_dic[val] for val in Data.drix_status_raw['drix_clutch']]
 
@@ -288,11 +294,15 @@ def plot_keel_state(Data, Title='Keel state'): # same operation as plot_drix_mod
 	encoder_dic = {"DOWN":0,"MIDDLE":1,"UP":2,"ERROR":4,"GOING UP ERROR":5,"GOING DOWN ERROR":6,"UP AND DOWN ERROR":7}
 
 	label_names_unique = Data.drix_status_raw['keel_state'].unique()
-	y_axis = {"vals":list(encoder_dic.values()),"keys":list(encoder_dic.keys())}
 
+	cmt = 1
 	for val in label_names_unique:
-		if val not in y_axis["keys"]:
+		if val not in list(encoder_dic.keys()):
 			print("Unknown keel state :",val)
+			encoder_dic[val] = -cmt
+			cmt +=1
+
+	y_axis = {"vals":list(encoder_dic.values()),"keys":list(encoder_dic.keys())}
 
 	list_msg = [encoder_dic[val] for val in Data.drix_status_raw['keel_state']]
 
@@ -392,10 +402,150 @@ def plot_trimmer_status(report_data, Data):
 
 
 
+# = = = = = = = = = = = = = = = = = = /d_iridium/iridium_status  = = = = = = = = = = = = = = = = = = = = = = = = = 
+
+def plot_iridium_status(report_data, Data):
+
+	y_ok_axis = {"vals":[0,1],"keys":["Not OK","OK"]}
+	y_binary_axis = {"vals":[0,1],"keys":["False","True"]}
+	y_signal_axis = {"vals":[0,1,2,3,4,5],"keys":["0","1","2","3","4","5"]}
+
+	fig1 = plot_data_reduced(Data.iridium_status_raw['is_iridium_link_ok'], Data.iridium_status_raw['Time'],'Iridium link state',y_ok_axis)
+	fig2 = plot_data_reduced(Data.iridium_status_raw['signal_strength'], Data.iridium_status_raw['Time'],'Signal strength',y_signal_axis)
+	fig3 = plot_registration_status(Data)
+	fig4 = plot_data_reduced(Data.iridium_status_raw['mo_status_code'], Data.iridium_status_raw['Time'],'MO = mobile originated = outgoing messages from modem to sattelites (GSS), mo_status_code', label_time = False)
+	fig5 = plot_data_reduced(Data.iridium_status_raw['last_mo_msg_sequence_number'], Data.iridium_status_raw['Time'],'last_mo_msg_sequence_number')
+	fig6 = plot_data_reduced(Data.iridium_status_raw['mt_status_code'], Data.iridium_status_raw['Time'],'MT = Mobile Terminated = incoming messages from modem to sattelites (GSS), mt_status_code')
+	fig7 = plot_data_reduced(Data.iridium_status_raw['mt_msg_sequence_number'], Data.iridium_status_raw['Time'],'Mobile Terminated Message Sequence Number is assigned by the GSS when forwarding a message to the ISU')
+	fig8 = plot_data_reduced(Data.iridium_status_raw['mt_length'], Data.iridium_status_raw['Time'],'length in bytes of the mobile terminated SBD message received from the GSS, mt_length')
+	fig9 = plot_data_reduced(Data.iridium_status_raw['gss_queued_msgs'], Data.iridium_status_raw['Time'],'MT queued is a count of mobile terminated SBD messages waiting at the GSS to be transferred to the ISU (modem), mt_length')
+	fig10 = plot_data_reduced(Data.iridium_status_raw['cmd_queue'], Data.iridium_status_raw['Time'],'cmd_queue')
+	fig11 = plot_data_reduced(Data.iridium_status_raw['failed_transaction_percent'], Data.iridium_status_raw['Time'],'Failed transaction (%)')
+
+
+	ihm.ihm_iridium_status(fig1,fig2,fig3,fig4,fig5,fig6,fig7,fig8,fig9,fig10,fig11)
+
+# - - - - - - - - - -
+
+
+def plot_registration_status(Data, Title='Registration status'): # same operation as plot_drix_mode()
+
+	
+	encoder_dic = {"detached":0,"not registered":1,"registered":2,"registration denied":4}
+
+	label_names_unique = Data.iridium_status_raw['registration_status'].unique()
+
+	cmt = 1
+	for val in label_names_unique:
+		if val not in list(encoder_dic.keys()):
+			print("Unknown keel state :",val)
+			encoder_dic[val] = -cmt
+			cmt +=1
+
+	y_axis = {"vals":list(encoder_dic.values()),"keys":list(encoder_dic.keys())}
+
+	list_msg = [encoder_dic[val] for val in Data.iridium_status_raw['registration_status']]
+
+	fig = plot_data_reduced(list_msg, Data.iridium_status_raw['Time'],Title,y_axis)
+
+	return(fig)
+
+
+
+# = = = = = = = = = = = =  /autopilot_node/ixblue_autopilot/autopilot_outputs  = = = = = = = = = = = = = = 
+
+
+def plot_autopilot(report_data, Data):
+
+	fig1 = plot_noisy_msg(Data.autopilot_raw['Speed'], Data.autopilot_raw['Time'],'Speed',50)
+	fig2 = plot_data_reduced(Data.autopilot_raw['ActiveSpeed'], Data.autopilot_raw['Time'],'Active Speed')
+	fig3 = plot_sawtooth_curve(Data.autopilot_raw['Delta'], Data.autopilot_raw['Time'],'Delta',50)
+	fig4 = plot_sawtooth_curve(Data.autopilot_raw['Regime'], Data.autopilot_raw['Time'],'Regime',50)
+	fig5 = plot_sawtooth_curve(Data.autopilot_raw['yawRate'], Data.autopilot_raw['Time'],'Yaw Rate',50)
+	fig6 = plot_diff_speed(Data)
+	
+	ihm.ihm_autopilot(fig1,fig2,fig3,fig4,fig5,fig6)
+
+
+# - - - - - - - - - -
+
+
+def plot_diff_speed(Data, Title = " Comparison between desired and actual speed  ",height = 4, width = 18,N = 5):
+
+	list_speed_gps = []
+	list_speed_autopilot = []
+	list_t = []
+	u = 0
+
+	for k in range(1 + N,len(Data.gps_UnderSamp_d['Time']),N):
+
+		# - - Compute gsp speed - - - 
+
+		list_t.append(Data.gps_UnderSamp_d['Time'][k])
+
+		dist = Data.gps_UnderSamp_d['list_dist'][k] - Data.gps_UnderSamp_d['list_dist'][k-(1+N)] # in km
+		dt = (Data.gps_UnderSamp_d["Time"][k] - Data.gps_UnderSamp_d['Time'][k-(1+N)]).total_seconds() # in s
+		speed = (dist*1000)/dt # in m/s
+		knots = speed*1.9438 # in knots/s
+
+		list_speed_gps.append(speed)
+
+	l = []
+
+	while (list_t[u] < Data.autopilot_raw['Time'][0]): # for the case, where the autopilot starts after 
+		u += 1 
+
+		if u == len(list_t):
+			break
+
+	u_ini = u
+	for k in range(len(Data.autopilot_raw['Time'])):
+
+		if u < len(list_t):
+
+			if Data.autopilot_raw['Time'][k] >= list_t[u]:
+
+				# - - Compute autopilot mean speed - - 
+				list_speed_autopilot.append(np.mean(l))
+				u += 1
+				l = []
+
+			l.append(Data.autopilot_raw["Speed"][k])
+
+	
+	list_t = list_t[u_ini:u] # we select only the values which can be compared to the autopilot data
+	list_speed_gps = list_speed_gps[u_ini:u] 
+	list_speed_autopilot = list_speed_autopilot 
+
+
+	fig, ax = plt.subplots()
+
+	fig.set_figheight(height)
+	fig.set_figwidth(width)
+
+	plt.title(Title)
+
+	list_t2 = [str(k.strftime('%H:%M')) for k in list_t]
+	list_index = xlabel_list(list_t2, c = 10)
+
+	points1 = ax.plot(list_index,list_speed_gps,'black', alpha=0.8)
+	points2 = ax.plot(list_index,list_speed_autopilot,'blue', alpha=0.8)
+		
+	elements = [points1,points2]
+	labels = ['GNSS speed','Autopilot speed']
+
+	plugins.connect(fig, plugins.InteractiveLegendPlugin(elements, labels))
+
+	# print(Title,"taille ",len(list_t))
+	# mpld3.show()
+
+	plt.close()
+	return(fig)
+
 
 # = = = = = = = = = = = = = = = = = = = = Tools  = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-def plot_centered_sawtooth_curve(list_msg,list_te, Title = 'Binary MSG', n = 10):
+def plot_centered_sawtooth_curve(list_msg,list_te, Title = 'Binary MSG', n = 10,height = 2, width = 18):
 
 	fig, ax = plt.subplots()
 
@@ -407,8 +557,8 @@ def plot_centered_sawtooth_curve(list_msg,list_te, Title = 'Binary MSG', n = 10)
 
 	Lx = list_index[:len(list_msg) - n:n]
 
-	fig.set_figheight(2)
-	fig.set_figwidth(18)
+	fig.set_figheight(height)
+	fig.set_figwidth(width)
 
 	plt.title(Title)
 
@@ -425,7 +575,7 @@ def plot_centered_sawtooth_curve(list_msg,list_te, Title = 'Binary MSG', n = 10)
 # - - - - - - - - - - - - 
 
 
-def plot_sawtooth_curve(list_msg,list_te, Title = 'Binary MSG', n = 10): # plot the mean curve, the max curve, the min curve 
+def plot_sawtooth_curve(list_msg,list_te, Title = 'Binary MSG', n = 10, height = 2, width = 18): # plot the mean curve, the max curve, the min curve 
 
 	fig, ax = plt.subplots()
 
@@ -438,8 +588,15 @@ def plot_sawtooth_curve(list_msg,list_te, Title = 'Binary MSG', n = 10): # plot 
 
 	Lx = list_index[:len(list_msg) - n:n]
 
-	fig.set_figheight(2)
-	fig.set_figwidth(18)
+	if np.max(Ly_max) < 10:
+		ax.set_ylim(np.min(Ly_min) - 1, np.max(Ly_max) + 1)
+
+	else: 
+		ax.set_ylim(np.min(Ly_min) - abs(int(np.min(Ly_min)*1/3)), np.max(Ly_max) + abs(int(np.max(Ly_max)*1/3)))
+
+
+	fig.set_figheight(height)
+	fig.set_figwidth(width)
 
 	plt.title(Title)
 
@@ -449,7 +606,7 @@ def plot_sawtooth_curve(list_msg,list_te, Title = 'Binary MSG', n = 10): # plot 
 	ax.fill_between(Lx, Ly_min, Ly_max, alpha=0.7)
 	ax.plot(Lx,Ly_min,'black')
 
-	print(Title,"taille ",len(Lx))
+	# print(Title,"taille ",len(Lx))
 	# mpld3.show()
 
 	plt.close()
@@ -460,7 +617,7 @@ def plot_sawtooth_curve(list_msg,list_te, Title = 'Binary MSG', n = 10): # plot 
 # - - - - - - - - - - - - 
 
 
-def plot_noisy_msg(list_msg,list_te, Title = 'Binary MSG', n = 10): # data fltering with the mean each n values 
+def plot_noisy_msg(list_msg,list_te, Title = 'Binary MSG', n = 10,height = 2, width = 18): # data fltering with the mean each n values 
 
 	fig, ax = plt.subplots()
 
@@ -475,17 +632,16 @@ def plot_noisy_msg(list_msg,list_te, Title = 'Binary MSG', n = 10): # data flter
 		ax.set_ylim(np.min(Ly) - 1, np.max(Ly) + 1)
 
 	else: 
-		ax.set_ylim(np.min(Ly) - int(np.max(Ly)//10), np.max(Ly) + int(np.max(Ly)//10))
+		ax.set_ylim(np.min(Ly) - abs(int(np.max(Ly)*1/3)), np.max(Ly) + abs(int(np.max(Ly)*1/3)))
 
-
-	fig.set_figheight(2)
-	fig.set_figwidth(18)
+	fig.set_figheight(height)
+	fig.set_figwidth(width)
 
 	plt.title(Title)
 
 	ax.plot(Lx,Ly,'blue')
 
-	print(Title, "taille ",len(Lx))
+	# print(Title, "taille ",len(Lx))
 	# mpld3.show()
 
 	plt.close()
@@ -567,15 +723,21 @@ def plot_data_reduced(list_msg, list_t_raw, Title, y_axis={"vals":[],"keys":[]},
 	tooltip = plugins.PointHTMLTooltip(points, labels)
 	plugins.connect(fig, tooltip)
 
-	ax.set_ylim(np.min(Ly) - 1, np.max(Ly) + 1)
 	fig.set_figheight(height)
 	fig.set_figwidth(width)
 	plt.title(Title)
 
+	if np.max(Ly) < 10:
+		ax.set_ylim(np.min(Ly) - 1, np.max(Ly) + 1)
+
+	else: 
+		ax.set_ylim(np.min(Ly) - abs(int(np.max(Ly)*1/3)), np.max(Ly) + abs(int(np.max(Ly)*1/3)))
+
+
 	if y_axis["vals"]:
 		plt.yticks(y_axis["vals"],y_axis["keys"])
 
-	print(Title,"taille ",len(Lx))
+	# print(Title,"taille ",len(Lx))
 
 	# mpld3.show()
 	plt.close()
@@ -653,6 +815,7 @@ def filter_binary_msg(data, condition): # report the times (start and end) when 
             v_ini += 1
 
     return(list_event)
+
 
 
 

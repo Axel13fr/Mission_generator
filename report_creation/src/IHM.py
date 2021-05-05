@@ -206,6 +206,11 @@ def generate_ihm(report_data):
 				a("RC_command data : "+"<a href = ../IHM/rc_command/Bilan_rc_command.html>Processed</a>"+'<br>')
 
 
+			with a.h2(id="id23409231", klass='main_header'):
+				a("Diagnostics data : "+"<a href = ../IHM/diagnostics/Bilan_diagnostics.html>Processed</a>"+'<br>')
+
+
+
 
 
 	html = str(a) # casting to string extracts the value
@@ -682,4 +687,31 @@ def ihm_rc_command(fig1):
 
 
 	with open('../IHM/rc_command/Bilan_rc_command.html', 'w') as f:
+		 f.write(str(html))
+
+
+
+def ihm_diagnostics(L):
+
+	a = Airium()
+
+	a('<!DOCTYPE html>')
+	with a.html(lang="pl"):
+		with a.head():
+			a.meta(charset="utf-8")
+			a.title(_t="Bilan diagnostics")
+
+		with a.body():
+			with a.h1(id="id23409231", klass='main_header'):
+				a("Diagnostics Graphs")
+
+			for f in L:
+				with a.p():
+			 		a(mpld3.fig_to_html(f))
+			
+			
+	html = str(a) # casting to string extracts the value
+
+
+	with open('../IHM/diagnostics/Bilan_diagnostics.html', 'w') as f:
 		 f.write(str(html))

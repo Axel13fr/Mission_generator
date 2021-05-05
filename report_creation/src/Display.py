@@ -245,10 +245,10 @@ def plot_drix_status(report_data, Data):
 	fig1 = plot_noisy_msg(Data.drix_status_raw['thruster_RPM'], Data.drix_status_raw['Time'],'thruster_RPM',100)
 	fig2 = plot_centered_sawtooth_curve(Data.drix_status_raw['rudderAngle_deg'], Data.drix_status_raw['Time'],'rudderAngle_deg',200)
 	fig3 = plot_noisy_msg(Data.drix_status_raw['gasolineLevel_percent'], Data.drix_status_raw['Time'],'Gasoline Level (%)',15000)
-	fig4 = plot_data_reduced(Data.drix_status_raw['emergency_mode'], Data.drix_status_raw['Time'],'Emergency mode',y_binary_axis)
-	fig5 = plot_data_reduced(Data.drix_status_raw['remoteControlLost'], Data.drix_status_raw['Time'],'Remote Control Lost',y_binary_axis)
-	fig6 = plot_data_reduced(Data.drix_status_raw['shutdown_requested'], Data.drix_status_raw['Time'],'shutdown_requested',y_binary_axis)
-	fig7 = plot_data_reduced(Data.drix_status_raw['reboot_requested'], Data.drix_status_raw['Time'],'reboot_requested',y_binary_axis)
+	fig4 = plot_data_reduced(Data.drix_status_raw['emergency_mode'], Data.drix_status_raw['Time'],'Emergency mode', y_axis=y_binary_axis)
+	fig5 = plot_data_reduced(Data.drix_status_raw['remoteControlLost'], Data.drix_status_raw['Time'],'Remote Control Lost', y_axis=y_binary_axis)
+	fig6 = plot_data_reduced(Data.drix_status_raw['shutdown_requested'], Data.drix_status_raw['Time'],'shutdown_requested', y_axis=y_binary_axis)
+	fig7 = plot_data_reduced(Data.drix_status_raw['reboot_requested'], Data.drix_status_raw['Time'],'reboot_requested', y_axis=y_binary_axis)
 	fig8 = plot_drix_mode(Data)
 	fig9 = plot_drix_clutch(Data)
 	fig10 = plot_keel_state(Data)
@@ -273,7 +273,7 @@ def plot_drix_mode(Data, Title='Drix Mode'):
 
 	list_msg = [encoder_dic[val] for val in Data.drix_status_raw['drix_mode']]
 
-	fig = plot_data_reduced(list_msg, Data.drix_status_raw['Time'],Title,y_axis)
+	fig = plot_data_reduced(list_msg, Data.drix_status_raw['Time'], Title, y_axis=y_axis)
 
 	return(fig)
 
@@ -299,7 +299,7 @@ def plot_drix_clutch(Data, Title='Drix Clutch'): # same operation as plot_drix_m
 
 	list_msg = [encoder_dic[val] for val in Data.drix_status_raw['drix_clutch']]
 
-	fig = plot_data_reduced(list_msg, Data.drix_status_raw['Time'],Title,y_axis)
+	fig = plot_data_reduced(list_msg, Data.drix_status_raw['Time'], Title, y_axis=y_axis)
 
 	return(fig)
 
@@ -325,7 +325,7 @@ def plot_keel_state(Data, Title='Keel state'): # same operation as plot_drix_mod
 
 	list_msg = [encoder_dic[val] for val in Data.drix_status_raw['keel_state']]
 
-	fig = plot_data_reduced(list_msg, Data.drix_status_raw['Time'],Title,y_axis)
+	fig = plot_data_reduced(list_msg, Data.drix_status_raw['Time'], Title, y_axis=y_axis)
 
 	return(fig)
 
@@ -355,17 +355,17 @@ def plot_telemetry(report_data, Data):
 
 	y_binary_axis = {"vals":[0,1],"keys":["False","True"]}
 
-	fig1 = plot_data_reduced(Data.telemetry_raw['is_drix_started'], Data.telemetry_raw['Time'],'Drix is started',y_binary_axis)
-	fig2 = plot_data_reduced(Data.telemetry_raw['is_navigation_lights_on'], Data.telemetry_raw['Time'],'Navigation lights',y_binary_axis)
-	fig3 = plot_data_reduced(Data.telemetry_raw['is_foghorn_on'], Data.telemetry_raw['Time'],'Foghorn',y_binary_axis)
-	fig4 = plot_data_reduced(Data.telemetry_raw['is_fans_on'], Data.telemetry_raw['Time'],'Fans',y_binary_axis)
-	fig5 = plot_data_reduced(Data.telemetry_raw['is_water_temperature_alarm_on'], Data.telemetry_raw['Time'],'Water temperature alarm',y_binary_axis)
-	fig6 = plot_data_reduced(Data.telemetry_raw['is_oil_pressure_alarm_on'], Data.telemetry_raw['Time'],'Oil pressure alarm',y_binary_axis)
-	fig7 = plot_data_reduced(Data.telemetry_raw['is_water_in_fuel_on'], Data.telemetry_raw['Time'],'Water in fuel',y_binary_axis)
-	fig8 = plot_data_reduced(Data.telemetry_raw['electronics_water_ingress'], Data.telemetry_raw['Time'],'Electronics water ingress',y_binary_axis)
-	fig9 = plot_data_reduced(Data.telemetry_raw['electronics_fire_on_board'], Data.telemetry_raw['Time'],'Electronics fire on board',y_binary_axis)
-	fig10 = plot_data_reduced(Data.telemetry_raw['engine_water_ingress'], Data.telemetry_raw['Time'],'Engine Water Ingress',y_binary_axis)
-	fig11 = plot_data_reduced(Data.telemetry_raw['engine_fire_on_board'], Data.telemetry_raw['Time'],'Engine fire on board',y_binary_axis)
+	fig1 = plot_data_reduced(Data.telemetry_raw['is_drix_started'], Data.telemetry_raw['Time'],'Drix is started', y_axis=y_binary_axis)
+	fig2 = plot_data_reduced(Data.telemetry_raw['is_navigation_lights_on'], Data.telemetry_raw['Time'],'Navigation lights', y_axis=y_binary_axis)
+	fig3 = plot_data_reduced(Data.telemetry_raw['is_foghorn_on'], Data.telemetry_raw['Time'],'Foghorn', y_axis=y_binary_axis)
+	fig4 = plot_data_reduced(Data.telemetry_raw['is_fans_on'], Data.telemetry_raw['Time'],'Fans', y_axis=y_binary_axis)
+	fig5 = plot_data_reduced(Data.telemetry_raw['is_water_temperature_alarm_on'], Data.telemetry_raw['Time'],'Water temperature alarm', y_axis=y_binary_axis)
+	fig6 = plot_data_reduced(Data.telemetry_raw['is_oil_pressure_alarm_on'], Data.telemetry_raw['Time'],'Oil pressure alarm', y_axis=y_binary_axis)
+	fig7 = plot_data_reduced(Data.telemetry_raw['is_water_in_fuel_on'], Data.telemetry_raw['Time'],'Water in fuel', y_axis=y_binary_axis)
+	fig8 = plot_data_reduced(Data.telemetry_raw['electronics_water_ingress'], Data.telemetry_raw['Time'],'Electronics water ingress', y_axis=y_binary_axis)
+	fig9 = plot_data_reduced(Data.telemetry_raw['electronics_fire_on_board'], Data.telemetry_raw['Time'],'Electronics fire on board', y_axis=y_binary_axis)
+	fig10 = plot_data_reduced(Data.telemetry_raw['engine_water_ingress'], Data.telemetry_raw['Time'],'Engine Water Ingress', y_axis=y_binary_axis)
+	fig11 = plot_data_reduced(Data.telemetry_raw['engine_fire_on_board'], Data.telemetry_raw['Time'],'Engine fire on board', y_axis=y_binary_axis)
 
 	fig12 = plot_noisy_msg(Data.telemetry_raw['oil_pressure_Bar'], Data.telemetry_raw['Time'],'Oil Pressure (Bar)',100)
 	fig13 = plot_data_reduced(Data.telemetry_raw['engine_water_temperature_deg'], Data.telemetry_raw['Time'],'Engine water temperature (deg)',label_time = False)
@@ -429,8 +429,8 @@ def plot_iridium_status(report_data, Data):
 	y_binary_axis = {"vals":[0,1],"keys":["False","True"]}
 	y_signal_axis = {"vals":[0,1,2,3,4,5],"keys":["0","1","2","3","4","5"]}
 
-	fig1 = plot_data_reduced(Data.iridium_status_raw['is_iridium_link_ok'], Data.iridium_status_raw['Time'],'Iridium link state',y_ok_axis)
-	fig2 = plot_data_reduced(Data.iridium_status_raw['signal_strength'], Data.iridium_status_raw['Time'],'Signal strength',y_signal_axis)
+	fig1 = plot_data_reduced(Data.iridium_status_raw['is_iridium_link_ok'], Data.iridium_status_raw['Time'],'Iridium link state', y_axis=y_ok_axis)
+	fig2 = plot_data_reduced(Data.iridium_status_raw['signal_strength'], Data.iridium_status_raw['Time'],'Signal strength', y_axis=y_signal_axis)
 	fig3 = plot_registration_status(Data)
 	fig4 = plot_data_reduced(Data.iridium_status_raw['mo_status_code'], Data.iridium_status_raw['Time'],'MO = mobile originated = outgoing messages from modem to sattelites (GSS), mo_status_code', label_time = False)
 	fig5 = plot_data_reduced(Data.iridium_status_raw['last_mo_msg_sequence_number'], Data.iridium_status_raw['Time'],'last_mo_msg_sequence_number')
@@ -584,6 +584,25 @@ def plot_rc_command(report_data, Data,Title = "Reception Mode"):
 	ihm.ihm_rc_command(fig1)
 
 
+
+# = = = = = = = = = = = = = = = = = = = = diagnostics  = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+def plot_diagnostics(report_data, Data):
+
+	y_signal_axis = {"vals":[0,1,2,3,4,5],"keys":["0","1","2","3","4","5"]}
+
+	L = []
+	Diags = Data.diagnostics_raw
+
+	for k in Diags.L_keys:
+			n = len(np.unique(Diags.L[k].level))
+			if n>1:				
+				fig = plot_data_reduced(Diags.L[k].level, Diags.L[k].time,Diags.L[k].name, y_signal_axis)
+				L.append(fig)
+
+	ihm.ihm_diagnostics(L)
+
+				
 
 
 # = = = = = = = = = = = = = = = = = = = = Tools  = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -816,7 +835,6 @@ def plot_data_reduced(list_msg, list_t_raw, Title, y_axis={"vals":[],"keys":[]},
 		plt.yticks(y_axis["vals"],y_axis["keys"])
 
 	# print(Title,"taille ",len(Lx))
-
 	# mpld3.show()
 	plt.close()
 

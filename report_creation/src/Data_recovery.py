@@ -41,14 +41,6 @@ class bagfile(object):
         self.datetime_date_d = self.recup_date(self.date_d, True)
         self.datetime_date_f = self.recup_date(self.date_f, True)
         self.bag_path = None
-        self.csv_path_GPS = None
-        self.csv_path_drix_status = None
-        self.csv_path_kongsberg_status = None
-        self.csv_path_d_phins = None
-        self.diagnostics_path = None
-        self.list_diag_paths = None
-        self.csv_path_telemetry = None 
-        self.csv_path_mothership = None
 
         try: # for the non conformed file
             self.recup_date_file()
@@ -102,6 +94,58 @@ class bagfile(object):
 
 # -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
+class diag(object):
+
+    def __init__(self, name, msg, level, time_raw, time, time_str):
+
+        self.name = name
+        self.msg = [msg]
+        self.level = [level]
+        self.time_raw = [time_raw]
+        self.time = [time]
+        self.time_str = [time_str]
+
+
+    def ad_values(self, new_diag):
+
+        self.msg.append(new_diag.msg[-1])
+        self.level.append(new_diag.level[-1])
+        self.time_raw.append(new_diag.time_raw[-1])
+        self.time.append(new_diag.time[-1])
+        self.time_str.append(new_diag.time_str[-1])
+
+
+# -  -  -  -  -  -  
+
+
+class List_diag(object):
+
+    def __init__(self):
+        self.L = {}
+        self.L_keys = []
+
+
+    def ad_diag(self, diag):
+
+        if diag.name not in self.L_keys:
+            self.L_keys.append(diag.name)
+            self.L[diag.name] = diag
+        else:
+            self.L[diag.name].ad_values(diag)
+
+
+    def handle_diag(self):
+
+        for k in self.L_keys:
+            n = len(np.unique(self.L[k].level))
+            if n>1:
+                plt.plot(self.L[k].level)
+                plt.title(k)
+                plt.show()
+
+
+# -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+
 class Drix_data(object):
 
     def __init__(self,L_bags):
@@ -120,6 +164,7 @@ class Drix_data(object):
         self.trimmer_status_raw = None
         self.iridium_status_raw = None 
         self.autopilot_raw = None
+        self.diagnostics_raw = None
 
         # - - - Undersampled data - - -
         self.gps_UnderSamp_d = None # Under distance sampling
@@ -164,6 +209,8 @@ class Drix_data(object):
         iridium_status_pd = []
         autopilot_pd = []
 
+        L_diag = List_diag()   
+            
         index = 0
         index_act = 0
         previous_act = L_bags[0].action_name
@@ -215,7 +262,6 @@ class Drix_data(object):
                         dic_gps['list_x'].append(x)
                         dic_gps['list_y'].append(y)
 
-
                     if topic == '/drix_status':
                         m:DrixOutput = msg
                         dic_drix_status['Time_raw'].append(time_raw)
@@ -231,8 +277,7 @@ class Drix_data(object):
                         dic_drix_status['keel_state'].append(m.keel_state)
                         dic_drix_status['shutdown_requested'].append(m.shutdown_requested)
                         dic_drix_status['reboot_requested'].append(m.reboot_requested)
-                        
-
+                      
                     if topic == '/d_phins/aipov':
                         m:aipov = msg 
                         dic_phins['Time_raw'].append(time_raw)
@@ -244,7 +289,6 @@ class Drix_data(object):
                         dic_phins['latitudeDeg'].append(m.latitudeDeg)
                         dic_phins['longitudeDeg'].append(m.longitudeDeg)
                  
-
                     if topic == '/d_phins/ins':  
                         m:Ins = msg 
                         dic_phins['Time_raw'].append(time_raw)
@@ -255,7 +299,6 @@ class Drix_data(object):
                         dic_phins['pitchDeg'].append(m.pitchDeg)
                         dic_phins['latitudeDeg'].append(m.latitude)
                         dic_phins['longitudeDeg'].append(m.longitude)
-
 
                     if topic == '/telemetry2': 
                         m:Telemetry2 = msg
@@ -292,8 +335,6 @@ class Drix_data(object):
                         dic_telemetry['engine_water_ingress'].append(m.engine_water_ingress)
                         dic_telemetry['engine_fire_on_board'].append(m.engine_fire_on_board)
                
-            
-
                     if topic == '/telemetry3':
                         m:Telemetry3 = msg
                         dic_telemetry['Time_raw'].append(time_raw)
@@ -308,9 +349,7 @@ class Drix_data(object):
                         dic_telemetry['current_main_battery_A'].append(m.current_main_battery_A)
                         dic_telemetry['time_left_main_battery_mins'].append(m.time_left_main_battery_mins)
                         dic_telemetry['engine_battery_voltage_V'].append(m.engine_battery_voltage_V)
-
                   
-
                     if topic == '/mothership_gps':
                         m:Gps = msg 
                         dic_mothership['Time_raw'].append(time_raw)
@@ -338,7 +377,6 @@ class Drix_data(object):
                         dic_gpu_state["total_mem_GB"].append(m.total_mem_GB)
                         dic_gpu_state["power_consumption_W"].append(m.power_consumption_W)
 
-
                     if topic == '/trimmer_status':
                         m:TrimmerStatus = msg
                         dic_trimmer_status['Time_raw'].append(time_raw)
@@ -351,14 +389,12 @@ class Drix_data(object):
                         dic_trimmer_status["relative_humidity_percent"].append(m.relative_humidity_percent)
                         dic_trimmer_status["position_deg"].append(m.position_deg)
                  
-
                     if topic == '/kongsberg_2040/kmstatus':
                         m:KongsbergStatus = msg 
                         dic_kongsberg_status['Time_raw'].append(m.time_sync)
                         dic_kongsberg_status['pu_powered'].append(m.pu_powered)
                         dic_kongsberg_status['pu_connected'].append(m.pu_connected)
                         dic_kongsberg_status['position_1'].append(m.position_1)
-
 
                     if topic == '/d_iridium/iridium_status':
                         m:IridiumStatus = msg
@@ -379,7 +415,6 @@ class Drix_data(object):
                         dic_iridium_status['cmd_queue'].append(m.cmd_queue)
                         dic_iridium_status['failed_transaction_percent'].append(m.failed_transaction_percent)
 
-
                     if topic == '/autopilot_node/ixblue_autopilot/autopilot_output':
                         m:AutopilotOutput = msg 
                         dic_autopilot['Time_raw'].append(time_raw)
@@ -391,17 +426,16 @@ class Drix_data(object):
                         dic_autopilot['Regime'].append(m.Regime)
                         dic_autopilot['yawRate'].append(m.yawRate)
 
-
+    
                     if topic == '/diagnostics':
                         m:DiagnosticArray = msg
 
-                        # for k in m.status:
+                        for k in m.status:
+                            m1:DiagnosticStatus = k
+                            Diag = diag(m1.name, m1.message, m1.level, time_raw, time, time_str)
+                            L_diag.ad_diag(Diag)
 
-                        #     m1:DiagnosticStatus = k
-
-                        #     print(m1.level)
-
-
+         
 
 
             print('Import rosbag : ',index,'/',len(L_bags))
@@ -523,14 +557,16 @@ class Drix_data(object):
         else:
             print('Error, no Iridium Status data found')
 
-
-
         if len(autopilot_pd) > 0:
             self.autopilot_raw = pd.concat(autopilot_pd, ignore_index=True)
             print('Autopilot output data imported ',len(autopilot_pd),'/',len(L_bags))
 
         else:
             print('Error, no Autopilot output data found')
+
+
+        self.diagnostics_raw = L_diag
+        print("Diagnostics data imported")
 
 
              
@@ -613,43 +649,49 @@ if __name__ == '__main__':
         print("GPS data processed ")
         report_data.msg_gps = Dp.MSG_gps(Data)
 
-    if (Data.mothership_raw is not None) and (Data.gps_raw is not None):
-        Dp.add_dist_mothership_drix(Data)
+    # if (Data.mothership_raw is not None) and (Data.gps_raw is not None):
+    #     Dp.add_dist_mothership_drix(Data)
 
-    if Data.drix_status_raw is not None:   
-        print("Drix status data processed") 
-        Disp.plot_drix_status(report_data,Data)
+    # if Data.drix_status_raw is not None:   
+    #     print("Drix status data processed") 
+    #     Disp.plot_drix_status(report_data,Data)
 
-    if Data.telemetry_raw is not None:
-        print("Telemetry data processed")
-        Disp.plot_telemetry(report_data, Data)
+    # if Data.telemetry_raw is not None:
+    #     print("Telemetry data processed")
+    #     Disp.plot_telemetry(report_data, Data)
 
-    if Data.gpu_state_raw is not None:
-        Disp.plot_gpu_state(report_data, Data)
-        print("Gpu state data processed")
+    # if Data.gpu_state_raw is not None:
+    #     Disp.plot_gpu_state(report_data, Data)
+    #     print("Gpu state data processed")
 
-    if Data.phins_raw is not None:
-        Disp.plot_phins(report_data, Data)
-        print("phins data processed")
+    # if Data.phins_raw is not None:
+    #     Disp.plot_phins(report_data, Data)
+    #     print("phins data processed")
 
-    if Data.trimmer_status_raw is not None:
-        Disp.plot_trimmer_status(report_data, Data)
-        print("Trimmer status data processed")
+    # if Data.trimmer_status_raw is not None:
+    #     Disp.plot_trimmer_status(report_data, Data)
+    #     print("Trimmer status data processed")
 
-    if Data.iridium_status_raw is not None:
-        Disp.plot_iridium_status(report_data, Data)
-        print("Iridium status data processed")
+    # if Data.iridium_status_raw is not None:
+    #     Disp.plot_iridium_status(report_data, Data)
+    #     print("Iridium status data processed")
 
-    if Data.autopilot_raw is not None:
-        Disp.plot_autopilot(report_data, Data)
-        print("Autopilot data processed")
+    # if Data.autopilot_raw is not None:
+    #     Disp.plot_autopilot(report_data, Data)
+    #     print("Autopilot data processed")
 
-    if Data.rc_command_raw is not None:
-        Disp.plot_rc_command(report_data, Data)
-        print("rc_command data processed")
+    # if Data.rc_command_raw is not None:
+    #     Disp.plot_rc_command(report_data, Data)
+    #     print("rc_command data processed")
 
-    if Data.gps_raw is not None:
-        IHM.generate_ihm(report_data)
+
+    if Data.diagnostics_raw is not None:
+        Disp.plot_diagnostics(report_data, Data)
+        print("Diagnostics data processed")
+
+
+    # if Data.gps_raw is not None:
+    #     IHM.generate_ihm(report_data)
 
     # [...]
 

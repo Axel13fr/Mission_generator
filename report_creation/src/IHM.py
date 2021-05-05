@@ -7,9 +7,10 @@ import Data_process as Dp # local import
 import Display as Disp # local import
 
 
-# - - - - - - - - - - - - - - - - - - - 
-# This script handles all IHM creation
-# - - - - - - - - - - - - - - - - - - -
+#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
+#							This script handles all IHM creation
+#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
+
 
 class Report_data(object):
 
@@ -192,12 +193,18 @@ def generate_ihm(report_data):
 			with a.h2(id="id23409231", klass='main_header'):
 
 				a("Iridium data : "+"<a href = ../IHM/iridium/Bilan_iridium_status.html>Processed</a>"+'<br>')
-				a(" ")
 
 
 			with a.h2(id="id23409231", klass='main_header'):
 				
 				a("Autopilot data : "+"<a href = ../IHM/autopilot/Bilan_autopilot.html>Processed</a>"+" | "+"<a href = ../IHM/autopilot/Bilan_autopilot_orig.html>Raw</a>"+'<br>')
+
+
+
+			with a.h2(id="id23409231", klass='main_header'):
+
+				a("RC_command data : "+"<a href = ../IHM/rc_command/Bilan_rc_command.html>Processed</a>"+'<br>')
+
 
 
 
@@ -619,6 +626,7 @@ def ihm_iridium_status(fig1,fig2,fig3,fig4,fig5,fig6,fig7,fig8,fig9,fig10,fig11)
 
 
 
+
 def ihm_autopilot(fig1,fig2,fig3,fig4,fig5,fig6):
 
 	a = Airium()
@@ -646,4 +654,32 @@ def ihm_autopilot(fig1,fig2,fig3,fig4,fig5,fig6):
 
 
 	with open('../IHM/autopilot/Bilan_autopilot.html', 'w') as f:
+		 f.write(str(html))
+
+
+
+
+
+def ihm_rc_command(fig1):
+
+	a = Airium()
+
+	a('<!DOCTYPE html>')
+	with a.html(lang="pl"):
+		with a.head():
+			a.meta(charset="utf-8")
+			a.title(_t="Bilan rc_command")
+
+		with a.body():
+			with a.h1(id="id23409231", klass='main_header'):
+				a("Remote Controller Command Graphs")
+
+			with a.p():
+			 	a(mpld3.fig_to_html(fig1))
+			
+			
+	html = str(a) # casting to string extracts the value
+
+
+	with open('../IHM/rc_command/Bilan_rc_command.html', 'w') as f:
 		 f.write(str(html))

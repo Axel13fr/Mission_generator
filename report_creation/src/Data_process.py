@@ -3,9 +3,10 @@ from datetime import datetime, timedelta
 import numpy as np
 from pyproj import Proj
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# This script handles all the data processing function
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+
+#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
+#               This script handles all the data processing function
+#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
 
 
 # = = = = = = = = = = = = = = = = = =  /gps  = = = = = = = = = = = = = = = = = = = = = = = =
@@ -13,49 +14,48 @@ from pyproj import Proj
 
 def UnderSampleGps(Data, dist_min = 0.008, n = 10): #fct that processes gps data
     
-    N = len(Data.gps_raw['Time_str'])
 
-    # - - - - - - Add distance data - - - - - -
+    if Data.gps_raw is not None:
 
-    list_dist = [0]
-    sum_dist = 0
+        N = len(Data.gps_raw['Time_str'])
 
-    for k in range(1,N):
-        a = np.array((Data.gps_raw['list_x'][k-1],Data.gps_raw['list_y'][k-1])) 
-        b = np.array((Data.gps_raw['list_x'][k],Data.gps_raw['list_y'][k]))
+        # - - - - - - Add distance data - - - - - -
 
-        dist = np.linalg.norm(a - b)/1000 # in km
-        sum_dist += abs(dist)
+        list_dist = [0]
+        sum_dist = 0
 
-        list_dist.append(np.round(sum_dist*1000)/1000)
+        for k in range(1,N):
+            a = np.array((Data.gps_raw['list_x'][k-1],Data.gps_raw['list_y'][k-1])) 
+            b = np.array((Data.gps_raw['list_x'][k],Data.gps_raw['list_y'][k]))
 
+            dist = np.linalg.norm(a - b)/1000 # in km
+            sum_dist += abs(dist)
 
-    Data.gps_raw = Data.gps_raw.assign(list_dist = list_dist) # distances in km
-
-
-    # - - - - - Under distance sampling - - - - - -
-
-    list_index = [0]
-    a = np.array((Data.gps_raw['list_x'][0],Data.gps_raw['list_y'][0])) 
-    for k in range(N):
-        b = np.array((Data.gps_raw['list_x'][k],Data.gps_raw['list_y'][k]))
-        dist = np.linalg.norm(a - b)/1000 # in km
-
-        if dist > dist_min: # in order to reduce the data number
-            list_index.append(k)
-            a = np.array((Data.gps_raw['list_x'][k],Data.gps_raw['list_y'][k])) 
+            list_dist.append(np.round(sum_dist*1000)/1000)
 
 
-    # print("dis ",list_dist[-20:])
+        Data.gps_raw = Data.gps_raw.assign(list_dist = list_dist) # distances in km
 
-    Data.gps_UnderSamp_d = Data.gps_raw.iloc[list_index,:].reset_index()
-    # nn = len(Data.gps_UnderSamp_d)
-    # print("dis ",Data.gps_UnderSamp_d["list_dist"][nn-20:nn-1])
+
+        # - - - - - Under distance sampling - - - - - -
+
+        list_index = [0]
+        a = np.array((Data.gps_raw['list_x'][0],Data.gps_raw['list_y'][0])) 
+        for k in range(N):
+            b = np.array((Data.gps_raw['list_x'][k],Data.gps_raw['list_y'][k]))
+            dist = np.linalg.norm(a - b)/1000 # in km
+
+            if dist > dist_min: # in order to reduce the data number
+                list_index.append(k)
+                a = np.array((Data.gps_raw['list_x'][k],Data.gps_raw['list_y'][k])) 
+
+        Data.gps_UnderSamp_d = Data.gps_raw.iloc[list_index,:].reset_index()
+
 
 
 def MSG_gps(Data):
 
-    if not type(Data.gps_raw) == "<class 'NoneType'>":
+    if Data.gps_raw is not None:
 
         # - - - - - - Gps msg - - - - - -
         N = len(Data.gps_raw['Time_str'])
@@ -73,7 +73,7 @@ def handle_actions(Data):
 
     # - = - = - = - gps - = - = - = -
 
-    if not type(Data.gps_raw) == "<class 'NoneType'>":
+    if Data.gps_raw is not None:
 
         # - - - - - - gps_actions - - - - - -
 
@@ -117,57 +117,11 @@ def handle_actions(Data):
             "list_knot":list_knot,"action_type":Data.gps_actions['action_type'][::2],"list_dt":list_dt})
 
         
-
-
 def UnderSample(data_pd, n = 2): #fct that processes under sampling
-    if not type(data_pd) == "<class 'NoneType'>":
+    if data_pd is not None:
         return(data_pd.iloc[::n,:].reset_index())
     else:
         return(None)
-
-
-# = = = = = = = = = = = = = = = = = =  /diagnostics  = = = = = = = = = = = = = = = = = = =
-
-def handle_diagnostics_data(bag): #fct that processes /diagnostics data
-
-    path = bag.diagnostics_path
-    L = []
-    for p in bag.list_diag_paths:
-
-       data = pd.read_csv(path+'/'+p)
-       L.append((p[:-4],data))
-
-    result = dict(L)
-
-    return (result)
-
-
-
-def drix_diagnostics_data(L_bags): # regroup all /diagnostics data
-
-    L_dic_file = []
-
-    for k in L_bags:
-
-        if k.diagnostics_path != None: # for the case where there is no kongsberg_2040/kmstatus data in that rosbag
-
-            dic_file = handle_diagnostics_data(k) 
-            L_dic_file.append(dic_file)
-    
-    DIC = []
-    for p in L_bags[0].list_diag_paths:
-        l = []
-
-        for dic in L_dic_file:
-            l.append(dic[p[:-4]])
-
-        DIC.append((p[:-4],pd.concat(l, ignore_index=True)))
-
-    diag_data = dict(DIC)
-
-    return(diag_data) # penser à cut les données en trop dans l'affichage
-
-
 
 
 # = = = = = = = = = = = = = = = = = = /mothership_gps  = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -212,7 +166,7 @@ def filter_binary_msg(data, condition): # report the times (start and end) when 
     l = data.query(condition).index.tolist()
 
     if not(l):
-        # print('Nothing found for ',condition)
+        print('Nothing found for ',condition)
         return None
 
     v_ini = l[0]
@@ -232,27 +186,5 @@ def filter_binary_msg(data, condition): # report the times (start and end) when 
     return(list_event)
 
 
-
-def index_time_limit(L,date_f, n): # select data only under date_f
-    cmt = 0
-
-    list_t = []
-    list_t_str = []
-
-    for k in range(0,len(L),n):
-
-        t = datetime.fromtimestamp(int(L[k])) - timedelta(hours=1, minutes=00)
-
-        if t < date_f:
-            list_t.append(t)
-            list_t_str.append(str(t))
-            cmt += 1
-
-    return list_t,list_t_str,cmt*n
-
-
-
-
-
-    
+  
 

@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 import shutil
 import subprocess 
 from pyproj import Proj
+import yaml
+import numpy as np
 
 import Data_process as Dp # local import
 import Display as Disp # local import
@@ -216,6 +218,11 @@ class Drix_data(object):
         previous_act = L_bags[0].action_name
         p = Proj(proj='utm',zone=10,ellps='WGS84')
 
+        info_dict = yaml.load(subprocess.Popen(['rosbag', 'info', '--yaml', L_bags[0].bag_path], stdout=subprocess.PIPE).communicate()[0], Loader=yaml.SafeLoader) # in order to collect the rosbag time 
+        diff = int(L_bags[0].date_N.strftime("%H")) - int(datetime.fromtimestamp(info_dict['start']).strftime("%H")) # diff btw the actual end survey time zone
+        time_delta = np.sign(diff)*timedelta(hours=abs(diff), minutes=00) # readjust the hours 
+        print(time_delta)
+
         for bagfile in L_bags:
 
             index += 1
@@ -242,7 +249,7 @@ class Drix_data(object):
             for topic, msg, t in bag.read_messages(topics = self.list_topics):
 
                 time_raw = t.to_sec()
-                time = datetime.fromtimestamp(int(t.to_sec())) - timedelta(hours=1, minutes=00)
+                time = datetime.fromtimestamp(int(t.to_sec())) + time_delta 
                 time_str = str(time)
 
                 if time <= bagfile.datetime_date_f:

@@ -147,227 +147,42 @@ def generate_ihm(report_data):
 
 			with a.p():
 				a("Drix mission between "+ display_date(report_data.date_d)+" and "+ display_date(report_data.date_f))
-				a(" ")
-				a(" ")
-				
+
+			with a.h2(id="id23409231", klass='main_header'):
+				a("Gps data : "+"<a href = ../IHM/gps/Bilan_gps.html>Processed</a>"+'<br>')
+
 			with a.p():
 				a("Total Distance performed : "+str(report_data.msg_gps["global_dist"])+" km"+'<br>')
 				a("Average speed : "+str(report_data.msg_gps['global_speed'])+" in m/s, "+str(report_data.msg_gps["global_knots"])+" in knot")
-				a(" ")
-				
 
 			with a.h2(id="id23409231", klass='main_header'):
-
-				a("Gps data : "+"<a href = ../IHM/gps/Bilan_gps.html>Processed</a>"+'<br>')
-				a(" ")
+				a("Drix status data: "+"<a href = ../IHM/drix_status/Bilan_drix_status.html>Processed</a>"+'<br>')
 
 			with a.h2(id="id23409231", klass='main_header'):
-
-				a("Drix status data: "+"<a href = ../IHM/drix_status/Bilan_drix_status.html>Processed</a>"+" | "+"<a href = ../IHM/drix_status/Bilan_drix_status_orig.html>Raw</a>"+'<br>')
-				a(" ")				
-
+				a("Telemetry data : "+"<a href = ../IHM/telemetry/Bilan_telemetry.html>Processed</a>"+'<br>')
 
 			with a.h2(id="id23409231", klass='main_header'):
-
-				a("Telemetry data : "+"<a href = ../IHM/telemetry/Bilan_telemetry.html>Processed</a>"+" | "+"<a href = ../IHM/telemetry/Bilan_telemetry_orig.html>Raw</a>"+'<br>')
-				a(" ")
-
+				a("Gpu state data : "+"<a href = ../IHM/gpu_state/Bilan_gpu_state.html>Processed</a>"+'<br>')
 
 			with a.h2(id="id23409231", klass='main_header'):
-
-				a("Gpu state data : "+"<a href = ../IHM/gpu_state/Bilan_gpu_state.html>Processed</a>"+" | "+"<a href = ../IHM/gpu_state/Bilan_gpu_state_orig.html>Raw</a>"+'<br>')
-				a(" ")
-
+				a("Phins data : "+"<a href = ../IHM/phins/Bilan_phins.html>Processed</a>"+'<br>')
 
 			with a.h2(id="id23409231", klass='main_header'):
-
-				a("Phins data : "+"<a href = ../IHM/phins/Bilan_phins.html>Processed</a>"+" | "+"<a href = ../IHM/phins/Bilan_phins_orig.html>Raw</a>"+'<br>')
-				a(" ")
-
+				a("Trimmer data : "+"<a href = ../IHM/trimmer_status/Bilan_trimmer_status.html>Processed</a>"+'<br>')
 
 			with a.h2(id="id23409231", klass='main_header'):
-				
-				a("Trimmer data : "+"<a href = ../IHM/trimmer_status/Bilan_trimmer_status.html>Processed</a>"+" | "+"<a href = ../IHM/trimmer_status/Bilan_trimmer_status_orig.html>Raw</a>"+'<br>')
-
-
-			with a.h2(id="id23409231", klass='main_header'):
-
 				a("Iridium data : "+"<a href = ../IHM/iridium/Bilan_iridium_status.html>Processed</a>"+'<br>')
 
+			with a.h2(id="id23409231", klass='main_header'):
+				a("Autopilot data : "+"<a href = ../IHM/autopilot/Bilan_autopilot.html>Processed</a>"+'<br>')
 
 			with a.h2(id="id23409231", klass='main_header'):
-				
-				a("Autopilot data : "+"<a href = ../IHM/autopilot/Bilan_autopilot.html>Processed</a>"+" | "+"<a href = ../IHM/autopilot/Bilan_autopilot_orig.html>Raw</a>"+'<br>')
-
-
-
-			with a.h2(id="id23409231", klass='main_header'):
-
 				a("RC_command data : "+"<a href = ../IHM/rc_command/Bilan_rc_command.html>Processed</a>"+'<br>')
-
 
 			with a.h2(id="id23409231", klass='main_header'):
 				a("Diagnostics data : "+"<a href = ../IHM/diagnostics/Bilan_diagnostics.html>Processed</a>"+'<br>')
 
-
-
-
-
 	html = str(a) # casting to string extracts the value
-
-	# print(html)
-
-	with open('../IHM/Mission_report.html', 'w') as f:
-		 f.write(str(html))
-
-
-# - - - - - - - - - - - - - 
-
-
-def generate_ihm_past(report_data):
-
-	a = Airium()
-
-	a('<!DOCTYPE html>')
-	with a.html(lang="pl"):
-		with a.head():
-			a.meta(charset="utf-8")
-			a.title(_t="Mission Report")
-
-		with a.body():
-			with a.h1(id="id23409231", klass='main_header'):
-				a("Mission Report")
-
-			with a.p():
-				a("Drix mission between "+ display_date(report_data.date_d)+" and "+ display_date(report_data.date_f))
-				a(" ")
-				a(" ")
-
-			with a.h2():
-				a(" ---------------- Drix_gps ------------")
-
-			with a.p():
-				a("<a href = ../IHM/gps/gps.html>\"<img src=\"../IHM/data/gps.png\" alt=\"GPS\" /></a>")
-
-			with a.p():
-				a("<a href = ../IHM/gps/dist.html>Evolution of the distance covered by the Drix </a>")
-				a(" ")
-
-			with a.p():
-				a("<a href = ../IHM/gps/mission_dist.html>Distance of the Drix mission</a>"+'<br>')
-				a(" ")
-
-			with a.p():
-				a("<a href = ../IHM/gps/speed.html>Speed history of the Drix mission</a>"+'<br>')
-				a(" ")
-
-			with a.p():
-				a("Total Distance performed : "+str(report_data.dist)+" km"+'<br>')
-				a("Average speed : "+str(report_data.avg_speed)+" in m/s, "+str(report_data.avg_speed_n)+" in knot")
-				a(" ")
-
-
-			with a.h2():
-				a("-------------- Drix_status -------------")
-
-			with a.p():
-				a(" ")
-				a("<a href = ../IHM/status/drix_status_gasoline.html>\"<img src=\"../IHM/data/drix_status_gasoline.png\" alt=\"Fuel\" /></a>")
-				a(" ")
-				a("<a href = ../IHM/status/drix_status_curves.html>Curves</a>" + " from drix_status" +'<br>')
-				a(" ")
-				
-			with a.p():
-				for key, value in report_data.L_drix_status_binary_msg.iteritems():
-					if value: # errors found case 
-						msg = display_binary_msg(value,report_data.L_drix_status_bn_error_msg[key])
-
-					else: # All clear case
-						msg = report_data.L_drix_status_bn_dflt_msg[key]
-
-					a(msg)
-					a(" ")
-
-			# 	msg = 'Remote Control never lost'
-			# 	if (report_data.L_rm_ControlLost != None):
-			# 		msg = display_binary_msg(report_data.L_rm_ControlLost, "Remote control lost == True :")
-			# 	a(msg)
-			# 	a(" ")
-
-			# with a.p():
-			# 	msg = 'Emergency mode never activated'
-			# 	if (report_data.L_emergency_mode != None):
-			# 		msg = display_binary_msg(report_data.L_emergency_mode, "Emergency mode == True :")
-			# 	a(msg)
-			# 	a(" ")
-
-			# with a.p():
-			# 	msg = 'No shutdown requested during the mission'
-			# 	if (report_data.L_shutdown_req != None):
-			# 		msg = display_binary_msg(report_data.L_shutdown_req, "Shutdown requested :")
-			# 	a(msg)
-			# 	a(" ")
-
-			# with a.p():
-			# 	msg = 'No reboot requested during the mission'
-			# 	if (report_data.L_reboot_req != None):
-			# 		msg = display_binary_msg(report_data.L_reboot_req, "Reboot requested :")
-			# 	a(msg)
-			# 	a(" ")
-
-
-
-			with a.p():
-				msg = 'No data found'
-				if (report_data.data_phins != None):
-
-					with a.h2():
-						a("-------------- Drix_phins -------------")
-
-					with a.h3():
-						a("Roll curve : "+'<br>')
-
-					msg1 = "Max negative : "+str(report_data.data_phins["roll_min"])+' (deg)'+'<br>'
-					msg2 = "Max positive numerical Value : "+str(report_data.data_phins["roll_max"])+' (deg)'+'<br>'
-					msg3 = "mean roll : "+str(report_data.data_phins["roll_mean"])+' (deg)'+'<br>'
-
-					a(msg1+msg2+msg3+'<br>')
-					a("Roll curve "+"<a href = ../IHM/phins/roll_subplots.html>subplots</a>"+'<br>')
-					a("Roll curve "+"<a href = ../IHM/phins/roll_curve.html>Global plot</a>"+'<br>')
-
-					a(" ")
-
-					with a.h3():
-						a("Pitch curve : "+'<br>')
-
-					msg1 = "Max negative : "+str(report_data.data_phins["pitch_min"])+' (deg)'+'<br>'
-					msg2 = "Max positive numerical Value : "+str(report_data.data_phins["pitch_max"])+' (deg)'+'<br>'
-					msg3 = "mean pitch : "+str(report_data.data_phins["pitch_mean"])+' (deg)'
-
-					a(msg1+msg2+msg3+'<br>')
-
-					a("Pitch curve "+"<a href = ../IHM/phins/pitch_subplots.html>subplots</a>"+'<br>')
-					a("Pitch curve "+"<a href = ../IHM/phins/pitch_curve.html>Global plot</a>"+'<br>')
-
-					a(" ")
-
-					with a.h3():
-						a("Heading curve : "+'<br>')
-
-					a("Heading curve "+"<a href = ../IHM/phins/heading_subplots.html>subplots</a>"+'<br>')
-					a("Heading curve "+"<a href = ../IHM/phins/heading_curve.html>Global plot</a>"+'<br>')
-
-				else:
-					a(msg)
-				a(" ")
-
-
-
-		# a(recup_html_graph('../IHM/gps.html'))
-
-	html = str(a) # casting to string extracts the value
-
-	# print(html)
 
 	with open('../IHM/Mission_report.html', 'w') as f:
 		 f.write(str(html))
@@ -404,7 +219,6 @@ def ihm_gps(fig1,fig2,fig3,fig4):
 
 # = = = = = = = = = = = = = = = = = = /drix_status  = = = = = = = = = = = = = = = = = = = = = = = = = 
 
-
 def ihm_drix_status(fig1,fig2,fig3,fig4,fig5,fig6,fig7,fig8,fig9,fig10):
 
 	a = Airium()
@@ -440,7 +254,6 @@ def ihm_drix_status(fig1,fig2,fig3,fig4,fig5,fig6,fig7,fig8,fig9,fig10):
 
 
 # = = = = = = = = = = = = = = = = = = /Telemetry2  = = = = = = = = = = = = = = = = = = = = = = = = = 
-
 
 def ihm_telemetry(fig1,fig2,fig3,fig4,fig5,fig6,fig7,fig8,fig9,fig10,fig11,fig12,fig13,fig14,fig15,fig16,fig17,fig18,fig19,fig20,fig21,fig22,fig23,fig24,fig25,fig26,fig27,fig28,fig29):
 
@@ -494,9 +307,7 @@ def ihm_telemetry(fig1,fig2,fig3,fig4,fig5,fig6,fig7,fig8,fig9,fig10,fig11,fig12
 			 	a(mpld3.fig_to_html(fig28))
 			 	a(mpld3.fig_to_html(fig29))
 
-
 	html = str(a) # casting to string extracts the value
-
 
 	# with open('../IHM/telemetry/Bilan_telemetry_orig.html', 'w') as f:
 	with open('../IHM/telemetry/Bilan_telemetry.html', 'w') as f:
@@ -504,7 +315,6 @@ def ihm_telemetry(fig1,fig2,fig3,fig4,fig5,fig6,fig7,fig8,fig9,fig10,fig11,fig12
 
 
 # = = = = = = = = = = = = = = = = = = /gpu_state  = = = = = = = = = = = = = = = = = = = = = = = = = 
-
 
 def ihm_gpu_state(fig1,fig2,fig3,fig4,fig5,fig6):
 
@@ -530,14 +340,12 @@ def ihm_gpu_state(fig1,fig2,fig3,fig4,fig5,fig6):
 			 	
 	html = str(a) # casting to string extracts the value
 
-
 	with open('../IHM/gpu_state/Bilan_gpu_state.html', 'w') as f:
 		 f.write(str(html))
 
 
 
 # = = = = = = = = = = = = = = = = = = /phins_curve  = = = = = = = = = = = = = = = = = = = = = = = = = 
-
 
 def ihm_phins(fig1,fig2,fig3):
 	a = Airium()
@@ -566,7 +374,6 @@ def ihm_phins(fig1,fig2,fig3):
 
 # = = = = = = = = = = = = = = = = = = /gpu_state  = = = = = = = = = = = = = = = = = = = = = = = = = 
 
-
 def ihm_trimmer_status(fig1,fig2,fig3,fig4,fig5):
 
 	a = Airium()
@@ -590,11 +397,11 @@ def ihm_trimmer_status(fig1,fig2,fig3,fig4,fig5):
 			 	
 	html = str(a) # casting to string extracts the value
 
-
 	with open('../IHM/trimmer_status/Bilan_trimmer_status.html', 'w') as f:
 		 f.write(str(html))
 
 
+# = = = = = = = = = = = = = = = = = = /iridium_status  = = = = = = = = = = = = = = = = = = = = = = = = = 
 
 def ihm_iridium_status(fig1,fig2,fig3,fig4,fig5,fig6,fig7,fig8,fig9,fig10,fig11):
 
@@ -625,12 +432,12 @@ def ihm_iridium_status(fig1,fig2,fig3,fig4,fig5,fig6,fig7,fig8,fig9,fig10,fig11)
 
 	html = str(a) # casting to string extracts the value
 
-
 	with open('../IHM/iridium/Bilan_iridium_status.html', 'w') as f:
 		 f.write(str(html))
 
 
 
+# = = = = = = = = = = = = = = = = = = /autopilot  = = = = = = = = = = = = = = = = = = = = = = = = = 
 
 def ihm_autopilot(fig1,fig2,fig3,fig4,fig5,fig6):
 
@@ -654,16 +461,14 @@ def ihm_autopilot(fig1,fig2,fig3,fig4,fig5,fig6):
 			 	a(mpld3.fig_to_html(fig5))
 			 	a(mpld3.fig_to_html(fig6))
 			 
-
 	html = str(a) # casting to string extracts the value
-
 
 	with open('../IHM/autopilot/Bilan_autopilot.html', 'w') as f:
 		 f.write(str(html))
 
 
 
-
+# = = = = = = = = = = = = = = = = = = /rc_command  = = = = = = = = = = = = = = = = = = = = = = = = = 
 
 def ihm_rc_command(fig1):
 
@@ -681,15 +486,14 @@ def ihm_rc_command(fig1):
 
 			with a.p():
 			 	a(mpld3.fig_to_html(fig1))
-			
-			
+						
 	html = str(a) # casting to string extracts the value
-
 
 	with open('../IHM/rc_command/Bilan_rc_command.html', 'w') as f:
 		 f.write(str(html))
 
 
+# = = = = = = = = = = = = = = = = = = /diagnostics  = = = = = = = = = = = = = = = = = = = = = = = = = 
 
 def ihm_diagnostics(L):
 
@@ -708,10 +512,8 @@ def ihm_diagnostics(L):
 			for f in L:
 				with a.p():
 			 		a(mpld3.fig_to_html(f))
-			
-			
+						
 	html = str(a) # casting to string extracts the value
-
 
 	with open('../IHM/diagnostics/Bilan_diagnostics.html', 'w') as f:
 		 f.write(str(html))

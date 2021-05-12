@@ -8,6 +8,10 @@ from mpld3 import plugins
 from mpld3 import utils
 from mpld3.utils import get_id
 import collections.abc
+import plotly.graph_objects as go
+import plotly.figure_factory as ff
+import plotly
+
 
 import Data_process as Dp # local import
 import IHM as ihm # local import
@@ -45,196 +49,258 @@ table, th, td
 
 # = = = = = = = = = = = = = = = = = =  /gps  = = = = = = = = = = = = = = = = = = = = = = = =
 
-def plot_gps(report_data, Data):
+def plot_gps(Data):
 
-	df = Data.gps_UnderSamp_d
+	
+	df1 = Data.gps['gps']
+	list_t = [k[-8:-3] for k in df1['t']]
+	df1 = df1.assign(time = list_t)
 
-	fig1, ax1 = plt.subplots()
-	ax1.grid(True, alpha=0.3)
+	list_hover_data1 =['time','action_type','list_dist_mship','list_dist','fix_quality']
+	title1 = "Gnss positions"
 
+	fig1 = px.scatter(df1, x='long', y='lat', hover_data = list_hover_data1, color = 'action_type', title = title1 ,labels={
+	                      "long": "Longitude (rad)",
+	                      "lat": "Latitude (rad)",
+	                      "fix_quality": "GPS quality",
+	                      "action_type" : "action type",
+	                      "list_dist_mship" : "Dist Drix/ship",
+	                      'list_dist' : 'Travelled distance',
+	                      'time' : 'Time' })
+	fig1.update_yaxes(scaleanchor = "x",scaleratio = 1)
 
-	color10_16 = {'IdleBoot' : 'blue','Idle' : 'cyan','goto' : 'magenta','follow_me' : "#636efa",'box-in': "#00cc96","path_following" : "#EF553B","dds" : "darkred",
-	"gaps" : "turquoise","backseat" : "blueviolet","control_calibration" : "teal","auv_following": "seagreen","hovering": "sienna","auto_survey": "grey"}
+	# - - - - - - - - 
 
+	df2 = Data.gps['dist']
+	list_t = [k[-8:-3]for k in df2['t']]
+	df2 = df2.assign(time = list_t)
+	title2 = 'Distance evolution'
 
-	label_names_unique = df['action_type'].unique()
+	fig2 = px.line(df2, x="time", y="y", title= title2, labels={"y": "Travelled distance (km)", 't' : 'Time'})
+	fig2.update_layout(hovermode="y")
 
-	cmt = 1
-	for val in label_names_unique:
-		if val not in list(color10_16.keys()):
-			print("Unknown action type :",val)
-			color10_16[val] = "deeppink"
-			cmt +=1
+	# - - - - - - - - 
 
-	L_act = list(color10_16.keys())
+	df3 = Data.gps['speed']
+	list_t = [k[-8:-3] for k in df3['t']]
+	list_index = [x for x in range(len(list_t))]
+	df3 = df3.assign(time = list_t)
+	df3 = df3.assign(list_index = list_index)
+	title3 = 'Speed history'
+	fig3 = px.bar(df3, y='y_speed', x='list_index',hover_data =['action_type','time'], color = 'action_type', title = title3,
+		labels={     "y_speed": "Drix speed (m/s)",
+					 "list_vit_act_n": "Drix speed (knot)",
+                     "action_type" : "action type",
+                     't' : 'Time'})
+	fig3.update_layout(xaxis = dict(tickmode = 'array', tickvals = df3['list_index'],ticktext = df3['time']))
+	fig3.update_traces(textposition='outside')
+	fig3.update_layout(uniformtext_minsize=8, uniformtext_mode='hide')
 
-	nr_elements = len(L_act)
-	elements = []
-	l = []
-
-	for i in range(nr_elements):
-		res = df[df['action_type'] == L_act[i]]
-		element = ax1.scatter(res['longitude'],res['latitude'], c = color10_16[L_act[i]], s = 0.5, alpha=0.8)
-		elements.append([element])
-
-	# - - - - - -
-
-	label_names = df['action_type']
-	label_names_unique = label_names.unique()
-	le = preprocessing.LabelEncoder()
-	le.fit(label_names_unique)
-	label_indices = le.transform(label_names)
-
-	points2 = ax1.scatter(df['longitude'],df['latitude'], c = label_indices, s = 2, alpha = 0.)
-
-	# - - -
-
-	hover_data = pd.DataFrame({'Time' : df['Time_str'],
-		'Travelled distance' :df['list_dist']
-        })
-
-	labels = []
-	for i in range(len(df['Time_str'])):
-	    label = hover_data.iloc[[i], :].T
-	    label.columns = ['Row {0}'.format(i)]
-	    labels.append(str(label.to_html()))
-
-	tooltip = plugins.PointHTMLTooltip(points2, labels,voffset=10, hoffset=10, css=css)
-
-	# - - - - - -
-
-	plugins.connect(fig1, tooltip, plugins.InteractiveLegendPlugin(elements, L_act))
-
-	plt.axis('equal')
-	plt.title('Gnss positions')
-	fig1.set_figheight(8)
-	fig1.set_figwidth(14)
-
-	report_data.gps_fig = fig1
-
-	# mpld3.save_html(fig1,"../IHM/gps/gps.html")
-	# mpld3.show()
+	fig1.show()
+	fig2.show()
+	fig3.show()
 
 
-	# - - - - - Distance travelled graph - - - - - -
-
-	if len(Data.gps_raw) < 1000:
-		df2 = Dp.UnderSample(Data.gps_raw, 20)
-
-	else:
-		df2 = Dp.UnderSample(Data.gps_raw, 200)
-
-	fig2, ax2 = plt.subplots()
-	labels_d = []
-	for i in range(len(df2['Time_str'])):
-	    labels_d.append("Time : "+str(df2['Time_str'][i])+" | Travelled distance : "+str(df2['list_dist'][i]))
-
-	t = xlabel_list(df2['Time_str'])
-
-	y = df2['list_dist'].values.tolist()
 
 
-	for i in range(nr_elements):
-		res = df2[df2['action_type'] == L_act[i]]
-		x = [t[k] for k in res.index]
-		points = ax2.scatter(x,res['list_dist'],c = color10_16[L_act[i]],label = L_act[i], s = 0.4, alpha = 1)
 
 
-	ax2.legend(markerscale=8., scatterpoints=1, fontsize=10)
 
-	points2 = ax2.scatter(t,y, s = 1, alpha = 0.4)
-	tooltip1 = plugins.PointHTMLTooltip(points2, labels_d,voffset=10, hoffset=10)
-	plugins.connect(fig2, tooltip1)
 
-	plt.title('Distance evolution')
-	fig2.set_figheight(8)
-	fig2.set_figwidth(14)
 
-	report_data.dist_fig = fig2
 
-	# mpld3.show()
-	# mpld3.save_html(fig2,"../IHM/gps/dist.html")
+
+
+
+
+	# df = Data.gps_UnderSamp_d
+
+	# fig1, ax1 = plt.subplots()
+	# ax1.grid(True, alpha=0.3)
+
+
+	# color10_16 = {'IdleBoot' : 'blue','Idle' : 'cyan','goto' : 'magenta','follow_me' : "#636efa",'box-in': "#00cc96","path_following" : "#EF553B","dds" : "darkred",
+	# "gaps" : "turquoise","backseat" : "blueviolet","control_calibration" : "teal","auv_following": "seagreen","hovering": "sienna","auto_survey": "grey"}
+
+
+	# label_names_unique = df['action_type'].unique()
+
+	# cmt = 1
+	# for val in label_names_unique:
+	# 	if val not in list(color10_16.keys()):
+	# 		print("Unknown action type :",val)
+	# 		color10_16[val] = "deeppink"
+	# 		cmt +=1
+
+	# L_act = list(color10_16.keys())
+
+	# nr_elements = len(L_act)
+	# elements = []
+	# l = []
+
+	# for i in range(nr_elements):
+	# 	res = df[df['action_type'] == L_act[i]]
+	# 	element = ax1.scatter(res['longitude'],res['latitude'], c = color10_16[L_act[i]], s = 0.5, alpha=0.8)
+	# 	elements.append([element])
+
+	# # - - - - - -
+
+	# label_names = df['action_type']
+	# label_names_unique = label_names.unique()
+	# le = preprocessing.LabelEncoder()
+	# le.fit(label_names_unique)
+	# label_indices = le.transform(label_names)
+
+	# points2 = ax1.scatter(df['longitude'],df['latitude'], c = label_indices, s = 2, alpha = 0.)
+
+	# # - - -
+
+	# hover_data = pd.DataFrame({'Time' : df['Time'],
+	# 	'Travelled distance' :df['list_dist']
+ #        })
+
+	# labels = []
+	# for i in range(len(df['Time'])):
+	#     label = hover_data.iloc[[i], :].T
+	#     label.columns = ['Row {0}'.format(i)]
+	#     labels.append(str(label.to_html()))
+
+	# tooltip = plugins.PointHTMLTooltip(points2, labels,voffset=10, hoffset=10, css=css)
+
+	# # - - - - - -
+
+	# plugins.connect(fig1, tooltip, plugins.InteractiveLegendPlugin(elements, L_act))
+
+	# plt.axis('equal')
+	# plt.title('Gnss positions')
+	# fig1.set_figheight(8)
+	# fig1.set_figwidth(14)
+
+	# report_data.gps_fig = fig1
+
+	# # mpld3.save_html(fig1,"../IHM/gps/gps.html")
+	# # mpld3.show()
+
+
+	# # - - - - - Distance travelled graph - - - - - -
+
+	# if len(Data.gps_raw) < 1000:
+	# 	df2 = Dp.UnderSample(Data.gps_raw, 20)
+
+	# else:
+	# 	df2 = Dp.UnderSample(Data.gps_raw, 200)
+
+	# fig2, ax2 = plt.subplots()
+	# labels_d = []
+	# for i in range(len(df2['Time'])):
+	#     labels_d.append("Time : "+str(df2['Time'][i])+" | Travelled distance : "+str(df2['list_dist'][i]))
+
+	# t = xlabel_list(df2['Time'])
+
+	# y = df2['list_dist'].values.tolist()
+
+
+	# for i in range(nr_elements):
+	# 	res = df2[df2['action_type'] == L_act[i]]
+	# 	x = [t[k] for k in res.index]
+	# 	points = ax2.scatter(x,res['list_dist'],c = color10_16[L_act[i]],label = L_act[i], s = 0.4, alpha = 1)
+
+
+	# ax2.legend(markerscale=8., scatterpoints=1, fontsize=10)
+
+	# points2 = ax2.scatter(t,y, s = 1, alpha = 0.4)
+	# tooltip1 = plugins.PointHTMLTooltip(points2, labels_d,voffset=10, hoffset=10)
+	# plugins.connect(fig2, tooltip1)
+
+	# plt.title('Distance evolution')
+	# fig2.set_figheight(8)
+	# fig2.set_figwidth(14)
+
+	# report_data.dist_fig = fig2
+
+	# # mpld3.show()
+	# # mpld3.save_html(fig2,"../IHM/gps/dist.html")
 
 
 	
-	# - - - - - Speed Bar chart - - - - - -
+	# # - - - - - Speed Bar chart - - - - - -
 
-	df3 = Data.Actions_data
+	# df3 = Data.Actions_data
 
-	list_index = []
-	list_speed = []
-	list_dist = []
-	colour = []
-	labels = []
+	# list_index = []
+	# list_speed = []
+	# list_dist = []
+	# colour = []
+	# labels = []
 
-	for k in range(len(df3['list_dt'])):
+	# for k in range(len(df3['list_dt'])):
 
-		if (df3['action_type'][k] != 'Idle' and df3['action_type'][k] != 'IdleBoot'):
+	# 	if (df3['action_type'][k] != 'Idle' and df3['action_type'][k] != 'IdleBoot'):
 			
-			list_speed.append(df3["list_speed"][k])
-			colour.append(color10_16[df3["action_type"][k]])
-			list_index.append(k)
-			labels.append(str(df3["list_t"][k][0].strftime('%H:%M')))
-			list_dist.append(df3["list_d"][k])
+	# 		list_speed.append(df3["list_speed"][k])
+	# 		colour.append(color10_16[df3["action_type"][k]])
+	# 		list_index.append(k)
+	# 		labels.append(str(df3["list_t"][k][0].strftime('%H:%M')))
+	# 		list_dist.append(df3["list_d"][k])
 
-	if list_speed:
-		borne_sup = int(np.max(list_speed)) + 2
+	# if list_speed:
+	# 	borne_sup = int(np.max(list_speed)) + 2
 
-	else:
-		borne_sup = 1
+	# else:
+	# 	borne_sup = 1
 
 
-	fig3, ax23 = plt.subplots()
-	ax23.set_ylim(0, borne_sup*1.9438)
-	ax23.set_ylabel('Knots')
-	ax3 = ax23.twinx()	# mpld3.save_html(fig3,"../IHM/gps/speed.html")
+	# fig3, ax23 = plt.subplots()
+	# ax23.set_ylim(0, borne_sup*1.9438)
+	# ax23.set_ylabel('Knots')
+	# ax3 = ax23.twinx()	# mpld3.save_html(fig3,"../IHM/gps/speed.html")
 
 	
 
-	x = np.arange(len(list_speed))  # the label locations
-	width = 0.5  # the width of the bars
+	# x = np.arange(len(list_speed))  # the label locations
+	# width = 0.5  # the width of the bars
 
-	rects1 = ax3.bar(x, list_speed, width,color=colour)
+	# rects1 = ax3.bar(x, list_speed, width,color=colour)
 
-	dx = pd.Series(np.zeros(len(labels)), index = labels)
-	dx.plot(alpha=0.)
-	plt.xticks(range(len(dx)), dx.index) 
+	# dx = pd.Series(np.zeros(len(labels)), index = labels)
+	# dx.plot(alpha=0.)
+	# plt.xticks(range(len(dx)), dx.index) 
 
-	ax3.set_ylim(0, borne_sup)
-	ax3.set_ylabel('m/s')
+	# ax3.set_ylim(0, borne_sup)
+	# ax3.set_ylabel('m/s')
 
-	plt.title('Speed history')
-	fig3.set_figheight(8)
-	fig3.set_figwidth(18)
+	# plt.title('Speed history')
+	# fig3.set_figheight(8)
+	# fig3.set_figwidth(18)
 
-	report_data.speed_fig = fig3
+	# report_data.speed_fig = fig3
 	
-	# mpld3.show()
-	# mpld3.save_html(fig3,"../IHM/gps/speed.html")
+	# # mpld3.show()
+	# # mpld3.save_html(fig3,"../IHM/gps/speed.html")
 
 
 
-	# - - - - - Distance Bar chart - - - - - -
+	# # - - - - - Distance Bar chart - - - - - -
 
-	fig4, ax4 = plt.subplots()
-	rects1 = ax4.bar(x, list_dist, width,color=colour)
+	# fig4, ax4 = plt.subplots()
+	# rects1 = ax4.bar(x, list_dist, width,color=colour)
 
-	x = pd.Series(np.zeros(len(labels)), index = labels)
-	x.plot(alpha=0.)
-	plt.xticks(range(len(x)), x.index)
+	# x = pd.Series(np.zeros(len(labels)), index = labels)
+	# x.plot(alpha=0.)
+	# plt.xticks(range(len(x)), x.index)
 
-	ax4.set_ylabel('km')
-	plt.title('Mission Distance')
-	fig4.set_figheight(8)
-	fig4.set_figwidth(18)
+	# ax4.set_ylabel('km')
+	# plt.title('Mission Distance')
+	# fig4.set_figheight(8)
+	# fig4.set_figwidth(18)
 	
 
-	report_data.mission_dist_fig = fig4
+	# report_data.mission_dist_fig = fig4
 
-	# mpld3.show()
-	# mpld3.save_html(fig4,"../IHM/gps/mission_dist.html")
+	# # mpld3.show()
+	# # mpld3.save_html(fig4,"../IHM/gps/mission_dist.html")
 
-	ihm.ihm_gps(fig1,fig2,fig3,fig4)
+	# ihm.ihm_gps(fig1,fig2,fig3,fig4)
 
 # = = = = = = = = = = = = = = = =  /drix_status  = = = = = = = = = = = = = = = = = = = = = = = =
 
@@ -345,9 +411,6 @@ def plot_phins(report_data, Data):
 # = = = = = = = = = = = = = = =  /kongsberg_2040/kmstatus  = = = = = =  = = = = = = = = = = = = = = 
 
 
-# = = = = = = = = = = = = = = = = = =  /diagnostics  = = = = = = = = = = = = = = = = = = = = = = = =
-
-
 
 # = = = = = = = = = = = = = = = = = = /Telemetry2  = = = = = = = = = = = = = = = = = = = = = = = = = 
 
@@ -407,7 +470,7 @@ def plot_gpu_state(report_data, Data):
 
 
 
-# = = = = = = = = = = = = = = = = = = /gpu_state  = = = = = = = = = = = = = = = = = = = = = = = = = 
+# = = = = = = = = = = = = = = = = = = /trimmer_status  = = = = = = = = = = = = = = = = = = = = = = = = = 
 
 def plot_trimmer_status(report_data, Data):
 

@@ -7,8 +7,19 @@ Prenons pour exemple, le topic “julienlebg”
 
 - Dans **Data_recovery.py** :  
    - Dans **class Drix_data** : 
-      ajouter le nom du topic dans la liste *self.list_topics*
-      ```
-      158    self.list_topics = ['/gps', ... , ‘/julienlebg’]
-      ```
+      - Dans **__init__()** : 
+         ajouter le nom du topic dans la liste *self.list_topics*
+         ```
+         158    self.list_topics = ['/gps', ... , ‘/julienlebg’]
+         ```
+         ajouter l'attribut pour stocker les données brutes
+         ```
+         175    self.julienlebg_raw
+         ```
+      
+      - Dans **rosbag2pd()** : 
+         ajouter une liste permettant de stocker les fichiers pandas
+         ```
+         266    julienlebg_pd = []
+         ```
 

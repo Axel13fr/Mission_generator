@@ -22,4 +22,8 @@ Prenons pour exemple, le topic “julienlebg”
          ```
          266    julienlebg_pd = []
          ```
-
+         ajouter un dictionnaire permettant de stoker les données issues du rosbag
+         ```
+         297    dic_julienlebg = {‘Time’ : [], ‘donnée1’ : [], ‘donnée2’ : [], ‘ect’ : []}
+         ```
+         

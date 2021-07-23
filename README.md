@@ -5,7 +5,7 @@ Développement d'un outil de génération de rapports de mission basée sur l'an
 
 ### Pour lancer le code
 
-Lancer **Data_recovery.py** afin de générer **Mission_report.html** dans le dossier IHM
+Lancer **Data_recovery.py** afin de récupérer les données
 
 ```
 python3 Data_recovery.py

@@ -1,0 +1,331 @@
+/* Eléments principaux de la page */
+
+body
+{
+    background-color:rgb(60,60,60);
+    color: rgb(183,181,182);
+    font-family: : verdana,serif;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+h1
+{
+    font-size: 2.5em;
+    color: rgb(21,137,131);
+    font-family: : verdana,serif;
+    
+}
+
+
+
+#bloc_page
+{
+    width: 98%;
+    margin: auto;
+    font-family: : verdana,serif;
+    
+}
+
+section h1, footer h1, nav a
+{
+    
+    font-weight: normal;
+    text-transform: uppercase;
+    color: white;
+}
+
+a
+{
+    color: white;
+}
+
+/* Header */
+
+header
+{
+    background-color:rgb(71, 75, 79); repeat-x bottom;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+
+}
+
+
+
+#logo
+{
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+}
+
+#logo img
+{
+    width: 300px;
+    height: 120px;
+}
+
+#photo 
+{
+    text-align: center;
+}
+
+header h1
+{
+   
+    font-size: 2.5em;
+
+    font-weight: normal;
+    font-family: : verdana,serif;
+    font-weight: bold;
+
+}
+
+header h2
+{
+    
+    font-size: 1.1em;
+    margin-top: 0px;
+    font-weight: normal;
+}
+
+#title_header
+{
+    
+    margin-left: auto;
+    margin-right: auto; 
+
+    
+}
+
+#title_header a
+{
+  color: DarkOrange;
+  text-decoration: none;
+}
+
+/* Navigation */
+
+nav ul
+{
+    list-style-type: none;
+    display: flex;
+
+}
+
+nav li
+{
+    margin-right: 15px;
+}
+
+nav a 
+{
+
+    font-size: 1.5em;
+    color: white;
+    padding-bottom: 3px;
+    text-decoration: none;
+}
+
+nav a:hover
+{
+    color: rgb(103, 104, 106) ; 
+    
+    background:rgb(103, 104, 106);
+}
+
+nav a:visited
+{
+    font-size: 1.3em;
+    color: white;
+    padding-bottom: 3px;
+    text-decoration: none;
+}
+
+/* Bannière */
+
+#banniere_image
+{
+    
+    margin-top: 15px;
+    
+    border-radius: 5px;
+    text-align: center;
+
+    max-width: 100%;
+    height: auto;
+    width: auto\9; /* ie8 */
+
+
+  
+    
+}
+
+
+
+
+/* Corps */
+
+#yt
+{
+  text-align: center;
+}
+
+#page_title
+{
+  color: DarkOrange;
+  text-align: center;
+}
+
+#intro h3
+{
+
+  color: DarkOrange;
+}
+
+section
+{
+    display: flex;
+    margin-bottom: 20px;
+}
+
+section a
+{
+  text-decoration: none;
+}
+
+section h1
+{
+  font-size: 1.5em;
+  color: DarkOrange;
+}
+
+article, aside
+{
+    text-align: justify;
+}
+
+article
+{   
+     margin-left: auto;
+    margin-right: auto;
+    
+}
+
+
+
+article p
+
+{  
+    font-size: 1.1em;
+
+}
+
+#name a
+{
+  text-decoration : none;
+}
+
+/* Footer */
+
+footer
+{
+    font-family: : verdana,serif;
+    
+    background-color:rgb(71, 75, 79); repeat-x top;
+    /*padding-top: 25px;*/
+}
+
+
+
+footer h1
+{
+    
+    text-align: center;
+    font-size: 1.5em;
+    
+}
+
+footer a
+{
+  color: DarkOrange;
+  text-decoration: none;
+}
+
+#content_footer
+{
+    text-align: center;
+}
+
+
+
+#video
+{
+    text-align: center;
+}
+
+#name
+{
+    text-align: center;
+}
+
+.collapsible {
+  background-color: rgb(71, 75, 79);
+  color: white;
+  cursor: pointer;
+  padding: 18px;
+  width: 100%;
+  border: none;
+  text-align: left;
+  outline: none;
+  font-size: 15px;
+}
+
+.active, .collapsible:hover {
+  background-color:rgb(103, 104, 106)
+}
+
+.content {
+  padding: 18px;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.2s ease-out;
+  background-color: rgb(40, 40, 40);
+  font-size: 20px;
+  
+}
+
+#date
+{   
+
+    font-weight: bold;
+    color: Teal;
+    font-size: 1.3em;
+    margin: 1;
+    list-style: square inside;
+
+}
+
+
+.displayed_img {
+    
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    
+
+  }
+
+  .displayed_img2 {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;  
+
+  }
+#titreu
+{ 
+  font-size: 1.5em;
+  color: DarkOrange;
+}
+

@@ -2,6 +2,9 @@
 
 Développement d'un outil de génération de rapports de mission basée sur l'analyse des informations capteurs de l'USV Drix 
 
+### Dependances
+- ROS Noetic (python3)
+- Packages python à installer avec pip: pandas, pyproj  
 
 ### Description du dépôt
 
@@ -34,4 +37,3 @@ Pour lancer le code **Data_collectiong.py**, il faut rentrer les paramètres dat
 ```
 python3 Data_collecting.py
 ```
-

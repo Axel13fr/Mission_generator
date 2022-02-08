@@ -545,7 +545,7 @@ class Drix_data(object):  # class to handle the data from the rosbags
                                 Diag = diag(m1.name, m1.message, m1.level, time)
                                 L_diag.add_diag(Diag)
 
-            print('Import rosbag : ', index, '/', len(L_bags))
+            print('Import rosbag : {} / {} | {}'.format(index,len(L_bags),bagfile.bag_name))
 
             # - - - - - - - - - - - -
 

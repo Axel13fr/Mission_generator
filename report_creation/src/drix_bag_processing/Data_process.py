@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import numpy as np
 from pyproj import Proj
 import matplotlib.pyplot as plt
-
+import logging
 import drix_bag_processing.Data_recovery as Dr
 
 #=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
@@ -281,32 +281,47 @@ def add_dist_mothership_drix(Data): # compute the distance btw the drix and the 
     
     list_t_drix = Data.gps_UnderSamp_d['Time']
 
+    logging.debug("Raw mothership GPS: {} vs Subsampled DriX GPS {}".format(Data.mothership_raw['Time'],
+                                                                                          Data.gps_UnderSamp_d['Time']))
+    INVALID_DISTANCE = -1
     u = 0
-    p = Proj(proj='utm',zone=10,ellps='WGS84')
+    p = Proj(proj='utm', zone=10, ellps='WGS84')
     list_dist_drix_mship = []
-    compt = 0 
-    compt2 = 0 
-    
-    for k in range(len(Data.mothership_raw['Time'])):
 
-        if u < len(list_t_drix):
-            compt += 1
+    for k in range(len(list_t_drix)):
+        # Need to compute distance to mothership using a GPS position of the mothership that's not too far in time
+        distance_computed = False
+        while not distance_computed:
+            if u < len(Data.mothership_raw['Time']):
+                if Data.mothership_raw['Time'][u] > list_t_drix[k]:
+                    # Found a mothership position received after the current drix position
+                    delta_t = (Data.mothership_raw['Time'][u] - list_t_drix[k]) / np.timedelta64(1, 's')
+                    MAX_DELTA_TIME_MOTHERSHIP_DRIX_GPS = 5.
+                    # If too much time, it means we have missed some mothership positions
+                    # so assign invalid distance
+                    if delta_t > MAX_DELTA_TIME_MOTHERSHIP_DRIX_GPS:
+                        list_dist_drix_mship.append(INVALID_DISTANCE)
+                    else:
+                        x, y = p(Data.mothership_raw['latitude'][u], Data.mothership_raw['longitude'][u])
+                        a = np.array((x, y))
+                        b = np.array((Data.gps_UnderSamp_d['list_x'][k], Data.gps_UnderSamp_d['list_y'][k]))
+                        d = np.linalg.norm(a - b) / 1000  # in km
+                        list_dist_drix_mship.append(int(abs(d) * 1000) / 1000)
 
-            if Data.mothership_raw['Time'][k] >= list_t_drix[u]:
-
-                compt2 += 1
-
-                x,y = p(Data.mothership_raw['latitude'][k], Data.mothership_raw['longitude'][k])
-                a = np.array((x, y))
-                b = np.array((Data.gps_UnderSamp_d['list_x'][u], Data.gps_UnderSamp_d['list_y'][u]))
-                d = np.linalg.norm(a - b)/1000 # in km
-
-                list_dist_drix_mship.append(int(abs(d)*1000)/1000)
-                u += 1
-
-    Data.gps_UnderSamp_d = Data.gps_UnderSamp_d.assign(dist_drix_mothership = list_dist_drix_mship)
+                    distance_computed = True
+                else:
+                    # Try next mothership position
+                    u += 1
+            else:
+                # We are running out of mothership positions: not received by DriX so assign invalid distance
+                list_dist_drix_mship.append(INVALID_DISTANCE)
+                distance_computed = True
 
 
+    try:
+        Data.gps_UnderSamp_d = Data.gps_UnderSamp_d.assign(dist_drix_mothership = list_dist_drix_mship)
+    except:
+        logging.debug("Length mothership distances: {}".format(len(list_dist_drix_mship)))
 
 # = = = = = = = = = = = = = = = =  /drix_status  = = = = = = = = = = = = = = = = = = = = = = = =
 

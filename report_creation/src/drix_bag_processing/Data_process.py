@@ -4,7 +4,7 @@ import numpy as np
 from pyproj import Proj
 import matplotlib.pyplot as plt
 
-import Data_recovery as Dr
+import drix_bag_processing.Data_recovery as Dr
 
 #=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
 #               This script handles all the data processing function

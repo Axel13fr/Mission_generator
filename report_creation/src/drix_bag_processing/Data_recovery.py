@@ -1,6 +1,6 @@
 import rosbag
 import pandas as pd
-import os
+import os, logging
 import shutil
 import operator
 from datetime import datetime, timedelta
@@ -11,7 +11,7 @@ import sys
 
 # - - Local import - - 
 
-import Data_process as Dp
+import drix_bag_processing.Data_process as Dp
 
 # - - ROS messages - - 
 
@@ -33,7 +33,7 @@ from drix_msgs.msg import RemoteController
 from drix_msgs.msg import DrixNetworkInfo
 from drix_msgs.msg import LinkInfo
 
-
+#
 # =#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
 
 
@@ -77,10 +77,11 @@ class bagfile(object):  # class to handle rosbag data (related to its file name)
             print("Name of the action :", self.action_name)
             print("Date : ", self.date_N)
 
-    def recup_date(self, name, test=False):  # converts name into datetime object
+    @staticmethod
+    def recup_date(name, test=False):  # converts name into datetime object
         L = name.split('_')
         l = L[0].split('-')
-
+        logging.debug("Split file: {}".format(name))
         if test:
             if len(l) != 6:  # Impossible case in theory, because this was already checked
                 print("Error the date limit should be at the format 'xx-xx-xx-xx-xx-xx' ")
@@ -693,22 +694,35 @@ def select_rosbagFile(L):  # collect the path of the rosbag
 
 
 def recup_data(date_d, date_f, path):
-    files = os.listdir(path)
+    MISSION_LOG_NAME = "mission_logs"
+    days_parent_dir = os.listdir(path)
     l_bags = []  # list of bagfile object
+    logging.debug("Days Parent Dir:", days_parent_dir)
+    for name in days_parent_dir:
+        DayPath = path + '/' + name
 
-    for name in files:
-        Path = path + '/' + name
+        day_dir = os.listdir(DayPath)
+        logging.debug("Day dir:", day_dir)
+        found_mission_logs_in_day_dir = False
+        for n in day_dir:
+            if n == MISSION_LOG_NAME:
+                found_mission_logs_in_day_dir = True
+                BagPath = DayPath + "/" + MISSION_LOG_NAME
+                mission_dir = os.listdir(BagPath)
+                for bag in mission_dir:
+                    logging.debug("Adding file {} from folder {}".format(bag, BagPath))
+                    bg = bagfile(name, bag, BagPath, path, date_d, date_f)
 
-        files2 = os.listdir(Path)
-
-        for n in files2:
-            bg = bagfile(name, n, Path, path, date_d, date_f)
-
-            if bg.bag_path != None:  # in order to kick the file without rosbag
-                l_bags.append(bg)
+                if bg.bag_path != None:  # in order to kick the file without rosbag
+                    l_bags.append(bg)
+        if not found_mission_logs_in_day_dir:
+            logging.warning("No mission log folder found for :", DayPath)
+    if not l_bags:
+        logging.error("No bag file found within specified directory")
+        return ()
 
     if l_bags[0].datetime_date_d > l_bags[0].datetime_date_f:
-        print("Invalid date limits: ", l_bags[0].datetime_date_d, ' < ', l_bags[0].datetime_date_f)
+        logging.error("Invalid date limits: ", l_bags[0].datetime_date_d, ' < ', l_bags[0].datetime_date_f)
         return ()
 
     l_bags.sort(key=operator.attrgetter('date_N'))
@@ -862,9 +876,11 @@ if __name__ == '__main__':
     # date_f = sys.argv[2] # date_f
     # path = sys.argv[3] # path
 
-    path = "/home/julienpir/Documents/iXblue/Data rosbag/25-2606"
+    logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
-    date_d = "25-06-2021-00-00-00"
-    date_f = "25-06-2021-12-00-00"
+    path = "/logs/20211213 DriX6 OTH Endurance/drix_logs"
+
+    date_d = "14-12-2021-00-00-00"
+    date_f = "16-12-2021-12-00-00"
 
     code_launcher(date_d, date_f, path)

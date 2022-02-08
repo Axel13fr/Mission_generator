@@ -39,43 +39,52 @@ from drix_msgs.msg import LinkInfo
 
 class bagfile(object):  # class to handle rosbag data (related to its file name)
 
-    def __init__(self, folder_name, bag_name, path, path_data_file, date_d, date_f):
+    def __init__(self, bag_name, path, date_d, date_f):
         self.path_file = path
-        self.path_data_file = path_data_file
-        self.folder_name = folder_name
         self.bag_name = bag_name
+        self.drix_number = 0
+        self.guidance_type = "?"
         self.date_d = date_d
         self.date_f = date_f
         self.datetime_date_d = self.get_date_from_user_string(self.date_d)
         self.datetime_date_f = self.get_date_from_user_string(self.date_f)
-        self.bag_path = None
+        self.has_correct_extension = False
+        self.bag_path = self.path_file + "/" + self.bag_name
 
-        try:  # for the non conformed file
-            self.recup_date_file()
-            self.recup_path_bag()
+        try:
+            # guidance_start_date, drix_number, guidance_name, bag_record_start_date
+            [self.date, self.drix_number, self.guidance_type, self.date_N] = self.get_infos_from_bag_name(bag_name)
+            self.has_correct_extension = self.has_bag_name_correct_extension(bag_name)
         except:
             pass
 
-    def recup_date_file(self):  # fct that collects all the data from the file name
-        l = self.folder_name
-        l1 = l.split('.')
-        l2 = l1[-1].split('_')
-
-        self.action_name = '_'.join(l2[1:])
-        self.micro_sec = l2[0]
-        self.date = l1[0]
-        self.date_N = self.get_date_from_bag_name(self.bag_name)
-
-    def recup_path_bag(self):  # fct that collects the rosbag path
-        l = self.bag_name.split('.')
-        if ((l[-1] == 'bag') or (l[-1] == 'active')) and (l[-2] != 'orig'):
-            self.bag_path = self.path_file + '/' + self.bag_name
 
     def display_data(self, all_var=False):  # fct to display file data
         print("Import file : ", self.folder_name)
         if all_var == True:
-            print("Name of the action :", self.action_name)
+            print("Name of the guidance :", self.guidance_type)
             print("Date : ", self.date_N)
+
+    @staticmethod
+    def has_bag_name_correct_extension(bag_name):
+        elms = bag_name.split('.')
+        if ((elms[-1] == 'bag') or (elms[-1] == 'active')) and (elms[-2] != 'orig'):
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def get_infos_from_bag_name(bag_name):
+        # Example: 2021-12-14T12-17-08_DRIX_6_goto_2021-12-14-12-17-09_0.bag
+        elms = bag_name.split("_")
+        # Date when the guidance started
+        guidance_start_date = datetime.strptime(elms[0],'%Y-%m-%dT%H-%M-%S')
+        drix_number = elms[2]
+        guidance_name = elms[3]
+        # Date when this bag file started to be recorded
+        bag_record_start_date = datetime.strptime(elms[4],'%Y-%m-%d-%H-%M-%S')
+
+        return [guidance_start_date, drix_number, guidance_name, bag_record_start_date]
 
     @staticmethod
     def get_date_from_user_string(user_string):
@@ -95,6 +104,7 @@ class bagfile(object):  # class to handle rosbag data (related to its file name)
 
     @staticmethod
     def get_date_from_bag_name(name):  # converts name into datetime object
+        # Exaùe! 2021-12-14T14-06-17_DRIX_6_path_following_2021-12-14-14-06-18_0.bag
         L = name.split('_')
         l = L[0].split('-')
         logging.debug("Split file: {}".format(name))
@@ -275,15 +285,15 @@ class Drix_data(object):  # class to handle the data from the rosbags
         index = 0
         index_act = 0
         TZ_off_set = False  # Time zone off set variable
-        previous_act = L_bags[0].action_name
+        previous_act = L_bags[0].guidance_type
         p = Proj(proj='utm', zone=10, ellps='WGS84')
 
         for bagfile in L_bags:
 
             index += 1
 
-            if bagfile.action_name != previous_act:
-                previous_act = bagfile.action_name
+            if bagfile.guidance_type != previous_act:
+                previous_act = bagfile.guidance_type
                 index_act += 1
 
             dic_gps = {'Time': [], 'latitude': [], 'longitude': [], 'action_type': [], 'action_type_index': [],
@@ -350,7 +360,7 @@ class Drix_data(object):  # class to handle the data from the rosbags
                             dic_gps['Time'].append(time)
                             dic_gps['latitude'].append(m.latitude)
                             dic_gps['longitude'].append(m.longitude)
-                            dic_gps['action_type'].append(bagfile.action_name)
+                            dic_gps['action_type'].append(bagfile.guidance_type)
                             dic_gps['action_type_index'].append(index_act)
                             dic_gps['fix_quality'].append(m.fix_quality)
 
@@ -707,8 +717,8 @@ def recup_data(date_d, date_f, path):
     days_parent_dir = os.listdir(path)
     l_bags = []  # list of bagfile object
     logging.debug("Days Parent Dir: {}".format(days_parent_dir))
-    for name in days_parent_dir:
-        DayPath = path + '/' + name
+    for day_dir in days_parent_dir:
+        DayPath = path + '/' + day_dir
 
         day_dir = os.listdir(DayPath)
         logging.debug("Day dir: {}".format(day_dir))
@@ -720,10 +730,9 @@ def recup_data(date_d, date_f, path):
                 mission_dir = os.listdir(BagPath)
                 for bag in mission_dir:
                     logging.debug("Adding file {} from folder {}".format(bag, BagPath))
-                    bg = bagfile(name, bag, BagPath, path, date_d, date_f)
-
-                if bg.bag_path != None:  # in order to kick the file without rosbag
-                    l_bags.append(bg)
+                    bg = bagfile(bag, BagPath, date_d, date_f)
+                    if bg.has_correct_extension:  # in order to kick the file without rosbag
+                        l_bags.append(bg)
         if not found_mission_logs_in_day_dir:
             logging.warning("No mission log folder found for :", DayPath)
     if not l_bags:

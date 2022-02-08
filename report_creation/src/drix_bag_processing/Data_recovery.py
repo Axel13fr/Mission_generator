@@ -39,15 +39,15 @@ from drix_msgs.msg import LinkInfo
 
 class bagfile(object):  # class to handle rosbag data (related to its file name)
 
-    def __init__(self, name_folder, name_bag, path, path_data_file, date_d, date_f):
+    def __init__(self, folder_name, bag_name, path, path_data_file, date_d, date_f):
         self.path_file = path
         self.path_data_file = path_data_file
-        self.name_folder = name_folder
-        self.name_bag = name_bag
+        self.folder_name = folder_name
+        self.bag_name = bag_name
         self.date_d = date_d
         self.date_f = date_f
-        self.datetime_date_d = self.recup_date(self.date_d, True)
-        self.datetime_date_f = self.recup_date(self.date_f, True)
+        self.datetime_date_d = self.get_date_from_user_string(self.date_d)
+        self.datetime_date_f = self.get_date_from_user_string(self.date_f)
         self.bag_path = None
 
         try:  # for the non conformed file
@@ -57,40 +57,49 @@ class bagfile(object):  # class to handle rosbag data (related to its file name)
             pass
 
     def recup_date_file(self):  # fct that collects all the data from the file name
-        l = self.name_folder
+        l = self.folder_name
         l1 = l.split('.')
         l2 = l1[-1].split('_')
 
         self.action_name = '_'.join(l2[1:])
         self.micro_sec = l2[0]
         self.date = l1[0]
-        self.date_N = self.recup_date(self.name_bag)
+        self.date_N = self.get_date_from_bag_name(self.bag_name)
 
     def recup_path_bag(self):  # fct that collects the rosbag path
-        l = self.name_bag.split('.')
+        l = self.bag_name.split('.')
         if ((l[-1] == 'bag') or (l[-1] == 'active')) and (l[-2] != 'orig'):
-            self.bag_path = self.path_file + '/' + self.name_bag
+            self.bag_path = self.path_file + '/' + self.bag_name
 
     def display_data(self, all_var=False):  # fct to display file data
-        print("Import file : ", self.name_folder)
+        print("Import file : ", self.folder_name)
         if all_var == True:
             print("Name of the action :", self.action_name)
             print("Date : ", self.date_N)
 
     @staticmethod
-    def recup_date(name, test=False):  # converts name into datetime object
+    def get_date_from_user_string(user_string):
+        try:
+            d = datetime.strptime(user_string, '%Y-%m-%dT%H-%M-%S')
+            return d
+        except:
+                try:
+                    d = datetime.strptime(user_string, '%Y-%m-%d-%H-%M-%S')
+                    return d
+                except:
+                    try:
+                        d = datetime.strptime(user_string, '%d-%m-%Y-%H-%M-%S')
+                        return d
+                    except:
+                        print("Failed to read date from user supplied input:" + user_string)
+
+    @staticmethod
+    def get_date_from_bag_name(name):  # converts name into datetime object
         L = name.split('_')
         l = L[0].split('-')
         logging.debug("Split file: {}".format(name))
-        if test:
-            if len(l) != 6:  # Impossible case in theory, because this was already checked
-                print("Error the date limit should be at the format 'xx-xx-xx-xx-xx-xx' ")
-            D = datetime.strptime(L[0], '%d-%m-%Y-%H-%M-%S')
+        return datetime.strptime(L[0], '%Y-%m-%dT%H-%M-%S')
 
-        else:
-            D = datetime.strptime(L[0], '%Y-%m-%d-%H-%M-%S')
-
-        return (D)
 
 
 # -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
@@ -211,7 +220,7 @@ class Drix_data(object):  # class to handle the data from the rosbags
     def test_rosbag(self, bagfile):
         path = bagfile.bag_path
 
-        l = bagfile.name_bag.split('.')
+        l = bagfile.bag_name.split('.')
 
         if l[-1] == 'active':  # because "try" some times return error for nothing when it's not a bag.active
 
@@ -697,12 +706,12 @@ def recup_data(date_d, date_f, path):
     MISSION_LOG_NAME = "mission_logs"
     days_parent_dir = os.listdir(path)
     l_bags = []  # list of bagfile object
-    logging.debug("Days Parent Dir:", days_parent_dir)
+    logging.debug("Days Parent Dir: {}".format(days_parent_dir))
     for name in days_parent_dir:
         DayPath = path + '/' + name
 
         day_dir = os.listdir(DayPath)
-        logging.debug("Day dir:", day_dir)
+        logging.debug("Day dir: {}".format(day_dir))
         found_mission_logs_in_day_dir = False
         for n in day_dir:
             if n == MISSION_LOG_NAME:
@@ -763,13 +772,13 @@ def code_launcher(date_d, date_f, path, debug=False):
 
     open('../../debug.txt', 'w').close()  # deletes the contents of the file
 
-    report('Script launched the ' + datetime.now().strftime('%d, %b %Y at %H:%M'))
-    report('Report Mission from : ' + date_d + ' and ' + date_f)
-    report('Data path : ' + path)
-    report(' ')
-    l_name_bags = [bag.name_bag for bag in L_bags]
-    report('Rosbags found : ' + str(l_name_bags))
-    report(' ')
+    logging.debug('Script launched the ' + datetime.now().strftime('%d, %b %Y at %H:%M'))
+    logging.debug('Report Mission from : ' + date_d + ' and ' + date_f)
+    logging.debug('Data path : ' + path)
+    logging.debug(' ')
+    l_name_bags = [bag.bag_name for bag in L_bags]
+    logging.debug('Rosbags found : ' + str(l_name_bags))
+    logging.debug(' ')
 
     # - - - - - - Rosbags recovery - - - - - -
     Data = Drix_data(L_bags)

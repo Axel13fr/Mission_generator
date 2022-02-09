@@ -1,15 +1,12 @@
 import plotly.express as px
-import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 from plotly.subplots import make_subplots
-from sklearn import preprocessing
-import collections.abc
 import plotly.graph_objects as go
-import plotly.figure_factory as ff
-import plotly
 
-import IHM # local import
+import plotly
+import robobox_report_generation.IHM as IHM
+
+import robobox_report_generation.IHM
 
 #=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
 #					This script handles all the data graph function

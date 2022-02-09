@@ -1,5 +1,6 @@
 # Ignored folders
 .idea/
-
+Store_data/
+report_creation/
 __pycache__/
  *.pyc

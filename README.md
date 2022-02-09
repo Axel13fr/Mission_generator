@@ -4,7 +4,9 @@ Développement d'un outil de génération de rapports de mission basée sur l'an
 
 ### Dependances
 - ROS Noetic (python3)
-- Packages python à installer avec pip: pandas, pyproj  
+- Packages python à installer avec pip:
+    - Partie extraction: pandas, pyproj
+    - Partie Display: padas, airium, plotly 
 
 ### Description du dépôt
 

@@ -1,7 +1,7 @@
 from airium import Airium
 from datetime import datetime
 from datetime import timedelta
-import matplotlib.pyplot as plt, mpld3
+import matplotlib.pyplot as plt
 import plotly
 
 

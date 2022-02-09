@@ -337,20 +337,22 @@ def extract_drix_status_data(Data):
     df2 = noisy_msg(df,'gasolineLevel_percent', path, 15000, N_round = 0)
     df3 = data_reduced(df,'emergency_mode', path)
     df4 = data_reduced(df, 'shutdown_requested', path)
-    df5 = extract_drix_mode_data(df, path)
-    df6 = extract_drix_clutch_data(df, path)
-    df7 = extract_keel_state_data(df, path)
-
+    #df5 = extract_drix_mode_data(df, path)
+    df5 = data_reduced(df, 'drix_mode', path)
+    #df6 = extract_drix_clutch_data(df, path)
+    df6 = data_reduced(df, 'drix_clutch', path)
+    #df7 = extract_keel_state_data(df, path)
+    df7 = data_reduced(df, 'keel_state', path)
 
 # - - - - - - - - 
 
 def extract_drix_mode_data(dff, path):
 
-    encoder_dic = {"DOCKING":0,"MANUAL":1,"AUTO":2}
-    label_names_unique = dff['drix_mode'].unique()
+    encoder_dic = {0: "DOCKING", 1: "MANUAL", 2: "AUTO"}
+    values_unique = dff['drix_mode'].unique()
 
     cmt = 1
-    for val in label_names_unique:
+    for val in values_unique:
         if val not in list(encoder_dic.keys()):
             print("Unknown drix mode :",val)
             encoder_dic[val] = -cmt
@@ -368,18 +370,18 @@ def extract_drix_mode_data(dff, path):
 
 def extract_drix_clutch_data(dff, path): # same operation as extract_drix_mode()
 
-    encoder_dic = {"BACKWARD":0,"NEUTRAL":1,"FORWARD":2,"ERROR":4}
-    label_names_unique = dff['drix_clutch'].unique()
-
+    encoder_dic = {0:"ERROR", 1:"BACKWARD", 2:"NEUTRAL", 3:"FORWARD"}
+    values_unique = dff['drix_clutch'].unique()
+    logging.debug(values_unique)
     cmt = 1
-    for val in label_names_unique:
+    for val in values_unique:
         if val not in list(encoder_dic.keys()):
             print("Unknown drix clutch :",val)
             encoder_dic[val] = -cmt
             cmt +=1
 
-    y_axis = {"vals":list(encoder_dic.values()),"keys":list(encoder_dic.keys())}
-    list_msg = [encoder_dic[val] for val in dff['drix_clutch']]
+    y_axis = {"vals":list(encoder_dic.keys()),"keys":list(encoder_dic.values())}
+    list_msg = [val for val in dff['drix_clutch']]
 
     df = data_reduced2(list_msg, dff['Time'], 'drix_clutch', path)
 

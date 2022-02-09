@@ -5,7 +5,7 @@ import shutil
 from datetime import datetime
 from datetime import timedelta
 import numpy as np
-import logging
+import logging, coloredlogs
 
 import robobox_report_generation.Display as Disp  # local import
 import robobox_report_generation.IHM as IHM
@@ -136,7 +136,7 @@ class recup_data(object):
 
                 df = pd.read_csv(path + '/' + name, na_filter=False)
                 df.columns.name = l[0]
-                print("Importing {}".format(name))
+                print("Importing {} from folder {}".format(name,path))
                 self.data[l[0]] = df
 
         # - - - - Data decompression - - - -
@@ -208,7 +208,6 @@ class recup_data(object):
         # - - - -
 
         df0['action_type'] = self.lengthen_data(df0['action_type'])
-
         l = list(self.encode_action.keys())
         df0 = df0.assign(action_type_str=[l[int(float(k))] for k in df0['action_type']])
 
@@ -270,6 +269,7 @@ class recup_data(object):
         # ~ ~ ~ ~ Pie Chart ~ ~ ~ ~
 
         list_action_type = df1['action_type'].unique()
+        logging.debug("Action types found: {}".format(list_action_type))
         L_name = df1['action_type_str'].unique()
         L_dist = []
         L_speed = []
@@ -669,7 +669,7 @@ if __name__ == '__main__':
     date_d = "14-12-2021-00-00-00"
     date_f = "16-12-2021-12-00-00"
 
-    logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+    coloredlogs.install(level='DEBUG')
 
     path_zip = '../../data.tar.xz'
 

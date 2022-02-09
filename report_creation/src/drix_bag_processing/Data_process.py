@@ -197,7 +197,7 @@ def extract_gps_data(Data):
 
     if len(Data.gps_raw) < 1000:
         n_dist = 20
-        df = Dp.UnderSample(Data.gps_raw, n_dist)
+        df = UnderSample(Data.gps_raw, n_dist)
 
     else:
         n_dist = 200
@@ -232,8 +232,7 @@ def extract_gps_data(Data):
 
     for k in range(len(Data.Actions_data['list_dt'])):
 
-        if (Data.Actions_data['action_type'][k] != 'Idle' and Data.Actions_data['action_type'][k] != 'IdleBoot'):
-            
+        if Data.Actions_data['action_type'][k] != 'Idle' and Data.Actions_data['action_type'][k] != 'IdleBoot':
             list_speed.append(np.round(Data.Actions_data["list_speed"][k],3))
             action_type.append(encode_action[Data.Actions_data["action_type"][k]])
             list_index.append(k)

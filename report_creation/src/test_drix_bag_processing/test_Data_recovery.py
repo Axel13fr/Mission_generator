@@ -27,6 +27,11 @@ class TestBagFile(unittest.TestCase):
         self.assertEqual(guidance_name, "goto")
         self.assertEqual(bag_record_start_date, datetime.datetime(2021, 12, 14, 12, 17, 9))
 
+        [guidance_start_date, drix_number, guidance_name, bag_record_start_date] = \
+            bagfile.get_infos_from_bag_name("2021-12-15T03-08-32_DRIX_6_path_following_2021-12-15-03-08-33_0.bag")
+        self.assertEqual(guidance_name, "path_following")
+        self.assertEqual(bag_record_start_date, datetime.datetime(2021, 12, 15, 3, 8, 33))
+
     def test_can_check_extension(self):
         self.assertEqual(False, bagfile.has_bag_name_correct_extension("2020-11-01-02-30-20_0.bag.orig.active"))
         self.assertEqual(True, bagfile.has_bag_name_correct_extension("2020-07-07-16-53-37_0.bag.active"))

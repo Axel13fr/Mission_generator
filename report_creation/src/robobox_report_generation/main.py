@@ -1,11 +1,9 @@
-import subprocess
+import argparse
 from datetime import datetime
 import sys
-import time
-import logging
+import coloredlogs
 
 import robobox_report_generation.Data_collecting as Dc
-import robobox_report_generation.IHM as IHM
 
 
 # =#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
@@ -43,12 +41,20 @@ def convert_date(name):  # convert into datetime object
 
 
 if __name__ == '__main__':
-    date_d = "14-12-2021-00-00-00"
-    date_f = "16-12-2021-12-00-00"
 
-    logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
-    print('Starting report generation from {} to {}'.format(date_d, date_f))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-s", type=str, required=True, help="Processing Start date (Ex: 15-12-2021-12-00-00)")
+    parser.add_argument("-e", type=str, required=True, help="Processing End date (Ex: 16-12-2021-12-00-00)")
+    parser.add_argument("-p", type=str, nargs='?', default="../../data.tar.xz",
+                        help="Path to tar.xz file containing processed data")
+    args = parser.parse_args()
 
-    path_zip = '../data.tar.xz'
+    date_d = args.s #"15-12-2021-00-00-00"
+    date_f = args.e #"16-12-2021-12-00-00"
+    path_zip = args.p
+
+    coloredlogs.install(level='DEBUG')
+    print('Starting report generation from {} to {} using file {}'.format(date_d, date_f, path_zip))
+
     Data = Dc.recup_data(path_zip, date_d, date_f)
     Dc.IHM_creation(Data)

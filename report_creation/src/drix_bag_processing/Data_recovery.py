@@ -1,13 +1,13 @@
 import rosbag
 import pandas as pd
-import os, logging
+import os, logging, coloredlogs
 import shutil
 import operator
 from datetime import datetime, timedelta
 import subprocess
 from pyproj import Proj
 import numpy as np
-import sys
+import sys, argparse
 
 # - - Local import - - 
 
@@ -20,7 +20,6 @@ from drix_msgs.msg import DrixCommand
 from ixblue_ins_msgs.msg import Ins
 from drix_msgs.msg import Telemetry2
 from drix_msgs.msg import Telemetry3
-from drix_msgs.msg import RemoteControlCommands
 from drix_msgs.msg import GpuState
 from drix_msgs.msg import TrimmerStatus
 from drix_msgs.msg import DrixOutput  # drix_status
@@ -80,9 +79,15 @@ class bagfile(object):  # class to handle rosbag data (related to its file name)
         # Date when the guidance started
         guidance_start_date = datetime.strptime(elms[0],'%Y-%m-%dT%H-%M-%S')
         drix_number = elms[2]
-        guidance_name = elms[3]
-        # Date when this bag file started to be recorded
-        bag_record_start_date = datetime.strptime(elms[4],'%Y-%m-%d-%H-%M-%S')
+        if len(elms) == 6:
+            guidance_name = elms[3]
+            # Date when this bag file started to be recorded
+            bag_record_start_date = datetime.strptime(elms[4], '%Y-%m-%d-%H-%M-%S')
+        elif len(elms) == 7:
+            guidance_name = elms[3] + "_" + elms[4]
+            # Date when this bag file started to be recorded
+            bag_record_start_date = datetime.strptime(elms[5], '%Y-%m-%d-%H-%M-%S')
+
 
         return [guidance_start_date, drix_number, guidance_name, bag_record_start_date]
 
@@ -165,12 +170,12 @@ class Drix_data(object):  # class to handle the data from the rosbags
         self.result_path_compressed = '../../data.tar.xz'
         self.mode_compress = True  # if the data will be compressed or not 
 
-        self.list_topics = ['/gps', '/kongsberg_2040/kmstatus', '/drix_status', '/telemetry2', '/d_phins/aipov',
-                            '/mothership_gps', '/rc_command',
+        self.list_topics = ['/gps', '/kongsberg_2040/kmstatus', '/drix_status', '/telemetry2','/telemetry3'
+                            '/mothership_gps','/rc_command','/d_phins/aipov', '/d_phins/ins',
                             '/gpu_state', '/trimmer_status', '/d_iridium/iridium_status',
                             '/autopilot_node/ixblue_autopilot/autopilot_output',
                             '/bridge_comm_slave/network_info', '/cc_bridge_comm_slave/network_info', '/command',
-                            '/rc_feedback', '/diagnostics']
+                            '/rc_feedback', '/diagnostics','/kongsberg_2040/kmstatus']
 
         # - - - Raw data - - - 
         self.gps_raw = None
@@ -294,6 +299,7 @@ class Drix_data(object):  # class to handle the data from the rosbags
 
             if bagfile.guidance_type != previous_act:
                 previous_act = bagfile.guidance_type
+                logging.debug("Guidance type: {}".format(bagfile.guidance_type))
                 index_act += 1
 
             dic_gps = {'Time': [], 'latitude': [], 'longitude': [], 'action_type': [], 'action_type_index': [],
@@ -391,9 +397,9 @@ class Drix_data(object):  # class to handle the data from the rosbags
                         if topic == '/d_phins/ins':
                             m: Ins = msg
                             dic_phins['Time'].append(time)
-                            dic_phins['headingDeg'].append(m.headingDeg)
-                            dic_phins['rollDeg'].append(m.rollDeg)
-                            dic_phins['pitchDeg'].append(m.pitchDeg)
+                            dic_phins['headingDeg'].append(m.heading)
+                            dic_phins['rollDeg'].append(m.roll)
+                            dic_phins['pitchDeg'].append(m.pitch)
                             dic_phins['latitudeDeg'].append(m.latitude)
                             dic_phins['longitudeDeg'].append(m.longitude)
 
@@ -434,15 +440,14 @@ class Drix_data(object):  # class to handle the data from the rosbags
                         if topic == '/telemetry3':
                             m: Telemetry3 = msg
                             dic_telemetry['Time'].append(time)
-                            dic_telemetry['oil_pressure_Bar'].append(m.oil_pressure_Bar)
-                            dic_telemetry['engine_water_temperature_deg'].append(m.engine_water_temperature_deg)
-                            dic_telemetry['main_battery_voltage_V'].append(m.main_battery_voltage_V)
-                            dic_telemetry['percent_main_battery'].append(m.percent_main_battery)
-                            dic_telemetry['percent_backup_battery'].append(m.percent_backup_battery)
-                            dic_telemetry['consumed_current_main_battery_Ah'].append(m.consumed_current_main_battery_Ah)
-                            dic_telemetry['current_main_battery_A'].append(m.current_main_battery_A)
-                            dic_telemetry['time_left_main_battery_mins'].append(m.time_left_main_battery_mins)
-                            dic_telemetry['engine_battery_voltage_V'].append(m.engine_battery_voltage_V)
+                            dic_telemetry['oil_pressure_Bar'].append(m.engine_oil_pressure)
+                            dic_telemetry['engine_water_temperature_deg'].append(m.engine_coolant_temperature)
+                            dic_telemetry['main_battery_voltage_V'].append(m.battery_1_voltage)
+                            dic_telemetry['backup_battery_voltage_V'].append(m.battery_2_voltage)
+                            dic_telemetry['percent_main_battery'].append(m.battery_1_percentagey)
+                            dic_telemetry['percent_backup_battery'].append(m.battery_2_percentage)
+                            dic_telemetry['current_main_battery_A'].append(m.battery_1_current)
+                            dic_telemetry['current_backup_battery_A'].append(m.battery_2_current)
 
                         if topic == '/mothership_gps':
                             m: Gps = msg
@@ -545,7 +550,7 @@ class Drix_data(object):  # class to handle the data from the rosbags
                                 Diag = diag(m1.name, m1.message, m1.level, time)
                                 L_diag.add_diag(Diag)
 
-            print('Import rosbag : {} / {} | {}'.format(index,len(L_bags),bagfile.bag_name))
+            logging.info('{} / {} | {}'.format(index,len(L_bags),bagfile.bag_name))
 
             # - - - - - - - - - - - -
 
@@ -607,96 +612,95 @@ class Drix_data(object):  # class to handle the data from the rosbags
             self.gps_raw = pd.concat(gps_List_pd, ignore_index=True)
             print3000("gps data imported : " + str(len(gps_List_pd)) + '/' + str(len(L_bags)))
         else:
-            print3000('Error, no gps data found')
+            logging.error('Error, no gps data found')
 
         if len(drix_status_List_pd) > 0:
             self.drix_status_raw = pd.concat(drix_status_List_pd, ignore_index=True)
             print3000("Drix_status data imported : " + str(len(drix_status_List_pd)) + '/' + str(len(L_bags)))
         else:
-            print3000('Error, no drix_status data found')
+            logging.error('Error, no drix_status data found')
 
         if len(d_phins_List_pd) > 0:
             self.phins_raw = pd.concat(d_phins_List_pd, ignore_index=True)
             print3000("Phins data imported : " + str(len(d_phins_List_pd)) + '/' + str(len(L_bags)))
         else:
-            print3000('Error, no phins data found')
+            logging.error('Error, no phins data found')
 
         if len(telemetry_List_pd) > 0:
             self.telemetry_raw = pd.concat(telemetry_List_pd, ignore_index=True)
             print3000("Telemetry data imported : " + str(len(telemetry_List_pd)) + '/' + str(len(L_bags)))
         else:
-            print3000('Error, no telemetry data found')
+            logging.error('Error, no telemetry data found')
 
         if len(mothership_List_pd) > 0:
             self.mothership_raw = pd.concat(mothership_List_pd, ignore_index=True)
             print3000("Mothership data imported : " + str(len(mothership_List_pd)) + '/' + str(len(L_bags)))
         else:
-            print3000('Error, no mothership data found')
+            logging.error('Error, no mothership data found')
 
         if len(kongsberg_status_List_pd) > 0:
             self.kongsberg_status_raw = pd.concat(kongsberg_status_List_pd, ignore_index=True)
             print3000("kongsberg_status data imported : " + str(len(kongsberg_status_List_pd)) + '/' + str(len(L_bags)))
         else:
-            print3000('Error, no kongsberg_status data found')
+            logging.error('Error, no kongsberg_status data found')
 
         if len(rc_command_pd) > 0:
             self.rc_command_raw = pd.concat(rc_command_pd, ignore_index=True)
             print3000("RC_command data imported : " + str(len(rc_command_pd)) + '/' + str(len(L_bags)))
         else:
-            print3000('Error, no RC_command data found')
+            logging.error('Error, no RC_command data found')
 
         if len(rc_feedback_pd) > 0:
             self.rc_feedback_raw = pd.concat(rc_feedback_pd, ignore_index=True)
             print3000("RC_feedback data imported : " + str(len(rc_feedback_pd)) + '/' + str(len(L_bags)))
         else:
-            print3000('Error, no RC_feedback data found')
+            logging.error('Error, no RC_feedback data found')
 
         if len(gpu_state_pd) > 0:
             self.gpu_state_raw = pd.concat(gpu_state_pd, ignore_index=True)
             print3000("GPU State data imported : " + str(len(gpu_state_pd)) + '/' + str(len(L_bags)))
         else:
-            print3000('Error, no GPU State data found')
+            logging.error('Error, no GPU State data found')
 
         if len(trimmer_status_pd) > 0:
             self.trimmer_status_raw = pd.concat(trimmer_status_pd, ignore_index=True)
             print3000("Trimmer Status data imported : " + str(len(trimmer_status_pd)) + '/' + str(len(L_bags)))
         else:
-            print3000('Error, no Trimmer Status data found')
+            logging.error('Error, no Trimmer Status data found')
 
         if len(iridium_status_pd) > 0:
             self.iridium_status_raw = pd.concat(iridium_status_pd, ignore_index=True)
             print3000("Iridium Status data imported : " + str(len(iridium_status_pd)) + '/' + str(len(L_bags)))
         else:
-            print3000('Error, no Iridium Status data found')
+            logging.error('Error, no Iridium Status data found')
 
         if len(autopilot_pd) > 0:
             self.autopilot_raw = pd.concat(autopilot_pd, ignore_index=True)
             print3000("Autopilot output data imported : " + str(len(autopilot_pd)) + '/' + str(len(L_bags)))
         else:
-            print3000('Error, no Autopilot output data found')
+            logging.error('Error, no Autopilot output data found')
 
         if len(command_pd) > 0:
             self.command_raw = pd.concat(command_pd, ignore_index=True)
             print3000("Command data imported : " + str(len(command_pd)) + '/' + str(len(L_bags)))
         else:
-            print3000('Error, no Command data found')
+            logging.error('Error, no Command data found')
 
         if len(bridge_comm_slave_pd) > 0:
             self.bridge_comm_slave_raw = pd.concat(bridge_comm_slave_pd, ignore_index=True)
             print3000("Bridge comm_slave data imported : " + str(len(bridge_comm_slave_pd)) + '/' + str(len(L_bags)))
         else:
-            print3000('Error, no bridge comm_slave data found')
+            logging.error('Error, no bridge comm_slave data found')
 
         if len(cc_bridge_comm_slave_pd) > 0:
             self.cc_bridge_comm_slave_raw = pd.concat(cc_bridge_comm_slave_pd, ignore_index=True)
             print3000(
                 "Cc_Bridge comm_slave data imported : " + str(len(cc_bridge_comm_slave_pd)) + '/' + str(len(L_bags)))
         else:
-            print3000('Error, no Cc_Bridge comm_slave data found')
+            logging.error('Error, no Cc_Bridge comm_slave data found')
 
         self.diagnostics_raw = L_diag
-        print3000("Diagnostics data imported")
-        print3000("  ")
+        logging.debug("Diagnostics data imported")
 
 
 # -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
@@ -888,17 +892,19 @@ def code_launcher(date_d, date_f, path, debug=False):
 
 # -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 
-
 if __name__ == '__main__':
-    # date_d = sys.argv[1] # date_d
-    # date_f = sys.argv[2] # date_f
-    # path = sys.argv[3] # path
 
-    logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-s", type=str,required=True, help="Processing Start date (Ex: 15-12-2021-12-00-00)")
+    parser.add_argument("-e", type=str, required=True, help="Processing End date (Ex: 16-12-2021-12-00-00)")
+    parser.add_argument("--bag_path", type=str, help="Path to drix_logs folder containing a sub folder per day")
+    args = parser.parse_args()
+
+    coloredlogs.install(level='DEBUG')
 
     path = "/logs/20211213 DriX6 OTH Endurance/drix_logs"
 
-    date_d = "14-12-2021-00-00-00"
-    date_f = "16-12-2021-12-00-00"
-
+    date_d = args.s #"15-12-2021-00-00-00"
+    date_f = args.e #"16-12-2021-12-00-00"
+    logging.info("Starting data processing from {} to {} on folder {}".format(date_d, date_f, path))
     code_launcher(date_d, date_f, path)

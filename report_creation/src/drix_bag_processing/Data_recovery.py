@@ -816,78 +816,92 @@ def code_launcher(date_d, date_f, path, debug=False):
     # - - - - - - Data processing - - - - - - -
     # -------------------------------------------
     report('Data processing : ')
+    N_processing = 15
+    p_cnt = 0
 
     Dp.set_up_mode_compress(Data)  # set up the compress mode global variable
 
     if (Data.mothership_raw is not None) and (Data.gps_raw is not None):
         Dp.add_dist_mothership_drix(Data)
+        logging.info("{} / {} Dist to mothership processed ".format(p_cnt,N_processing))
+        p_cnt += 1
 
     if Data.gps_raw is not None:
         Dp.extract_gps_data(Data)
-        print("GPS data processed ")
+        logging.info("{} / {} GPS data processed ".format(p_cnt,N_processing))
+        p_cnt += 1
 
     if Data.drix_status_raw is not None:
         Dp.extract_drix_status_data(Data)
-        print("Drix status data processed")
+        logging.info("{} / {} Drix status data processed".format(p_cnt,N_processing))
+        p_cnt += 1
 
     if Data.phins_raw is not None:
         Dp.extract_phins_data(Data)
-        print("phins data processed")
+        logging.info("{} / {} phins data processed".format(p_cnt,N_processing))
+        p_cnt += 1
 
     if Data.telemetry_raw is not None:
         Dp.extract_telemetry_data(Data)
-        print("Telemetry data processed")
+        logging.info("{} / {} Telemetry data processed".format(p_cnt,N_processing))
+        p_cnt += 1
 
     if Data.gpu_state_raw is not None:
         Dp.extract_gpu_state_data(Data)
-        print("Gpu state data processed")
+        logging.info("{} / {} Gpu state data processed".format(p_cnt,N_processing))
+        p_cnt += 1
 
     if Data.trimmer_status_raw is not None:
         Dp.extract_trimmer_status_data(Data)
-        print("Trimmer status data processed")
+        logging.info("{} / {} Trimmer status data processed".format(p_cnt,N_processing))
+        p_cnt += 1
 
     if Data.iridium_status_raw is not None:
         Dp.extract_iridium_status_data(Data)
-        print("Iridium status data processed")
+        logging.info("{} / {} Iridium status data processed".format(p_cnt,N_processing))
+        p_cnt += 1
 
     if Data.autopilot_raw is not None:
         Dp.extract_autopilot_data(Data)
-        print("Autopilot data processed")
+        logging.info("{} / {} Autopilot data processed".format(p_cnt,N_processing))
+        p_cnt += 1
 
     if Data.rc_command_raw is not None:
         Dp.extract_rc_command_data(Data)
-        print("rc_command data processed")
+        logging.info("{} / {} rc_command data processed".format(p_cnt,N_processing))
+        p_cnt += 1
 
     if Data.rc_feedback_raw is not None:
         Dp.extract_rc_feedback_data(Data)
-        print("rc_feedback data processed")
+        logging.info("{} / {} rc_feedback data processed".format(p_cnt,N_processing))
+        p_cnt += 1
 
     if Data.command_raw is not None:
         Dp.extract_command_data(Data)
-        print("Command data processed")
+        logging.info("{} / {} Command data processed".format(p_cnt,N_processing))
+        p_cnt += 1
 
     if Data.bridge_comm_slave_raw is not None:
         Dp.extract_bridge_comm_slave_data(Data)
-        print("Bridge_comm_slave data processed")
+        logging.info("{} / {} Bridge_comm_slave data processed".format(p_cnt,N_processing))
+        p_cnt += 1
 
     if Data.cc_bridge_comm_slave_raw is not None:
         Dp.extract_cc_bridge_comm_slave_data(Data)
-        print("Cc_bridge_comm_slave data processed")
+        logging.info("{} / {} Cc_bridge_comm_slave data processed".format(p_cnt,N_processing))
+        p_cnt += 1
 
     if Data.diagnostics_raw is not None:
         Dp.extract_diagnostics_data(Data)
-        print("Diagnostics data processed")
-
-    # if debug:
-    # on transmet le fichier (debug.txt)
-    # sinon il reste la
+        logging.info("{} / {} Diagnostics data processed".format(p_cnt,N_processing))
+        p_cnt += 1
 
     # subprocess.run(["tar", "-Jcvf", Data.result_path_compressed, Data.result_path])
     subprocess.run(["tar", "-Jcf", Data.result_path_compressed, Data.result_path])
 
     # /!\ Temporaire 
     file_size = os.path.getsize(Data.result_path_compressed)
-    report('data.tar.xz size : ' + str(file_size))
+    logging.info('Archive file size : {} bytes' .format((file_size)))
 
 
 # -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -

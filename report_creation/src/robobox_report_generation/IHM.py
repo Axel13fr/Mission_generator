@@ -232,7 +232,7 @@ def analysis_page_creation(Data, num = 'G'):
 					with a.ul(klass = "categories"):
 
 						with a.li():
-							a("<a href=\"iridium/Bilan_iridium_status9000_"+num+".html\"><span class=\"icon\"><img src=\"Photos/search-icon-01.png\" alt=\"Home\"></span> Iridium</a>")
+							a("<a href=\"iridium/Bilan_iridium_status9000_"+num+".html\"><span class=\"icon\"><img src=\"Photos/search-icon-01.png\" alt=\"Home\"></span> Iridium SBD</a>")
 						with a.li():
 							a("<a href=\"autopilot/Bilan_autopilot9000_"+num+".html\"><span class=\"icon\"><img src=\"Photos/search-icon-01.png\" alt=\"Home\"></span> Autopilot</a>")
 						with a.li():
@@ -240,7 +240,7 @@ def analysis_page_creation(Data, num = 'G'):
 						with a.li():
 							a("<a href=\"command/Bilan_command_status9000_"+num+".html\"><span class=\"icon\"><img src=\"Photos/search-icon-01.png\" alt=\"Home\"></span> Command</a>")
 						with a.li():
-							a("<a href=\"bridge_comm_slave/Bilan_bridge_comm_slave9000_"+num+".html\"><span class=\"icon\"><img src=\"Photos/search-icon-01.png\" alt=\"Home\"></span> Bridge comm slave</a>")
+							a("<a href=\"bridge_comm_slave/Bilan_bridge_comm_slave9000_"+num+".html\"><span class=\"icon\"><img src=\"Photos/search-icon-01.png\" alt=\"Home\"></span> Communications</a>")
 
 	
 	contenu = str(a) # casting to string extracts the value

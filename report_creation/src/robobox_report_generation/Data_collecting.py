@@ -136,7 +136,7 @@ class recup_data(object):
 
                 df = pd.read_csv(path + '/' + name, na_filter=False)
                 df.columns.name = l[0]
-                print("Importing {} from folder {}".format(name,path))
+                logging.debug("Importing {} from folder {}".format(name,path))
                 self.data[l[0]] = df
 
         # - - - - Data decompression - - - -

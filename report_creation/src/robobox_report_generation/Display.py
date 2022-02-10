@@ -619,7 +619,7 @@ def plot_bridge_comm_slave_data(Data):
 
 			Fig2 = merge_plots([f1,f2], 'Packet Loss')
 
-			IHM.html_page_creation(Data, 'bridge_comm_slave', [Fig1, Fig2], '/bridge_comm_slave/Bilan_bridge_comm_slave9000_'+str(k+1)+'.html')
+			IHM.html_page_creation(Data, 'Communications', [Fig1, Fig2], '/bridge_comm_slave/Bilan_bridge_comm_slave9000_'+str(k+1)+'.html')
 
 
 	# - - Global Plots - -
@@ -806,7 +806,7 @@ def normal_plot(df, labels, name, y_axis = None, x_axis = None, x_label = None, 
 
 	# - - - - graph creation - - - -
 
-	if 'y_max' in df.columns.tolist():
+	if 'y_maximPORTING ' in df.columns.tolist():
 		
 		fig = go.Figure()
 		fig.add_trace(go.Scatter(x=df['Time'], y=df['y_min'],fill=None, mode='lines',line_color="#116e69",name = 'Extreme values'))

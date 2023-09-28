@@ -4,9 +4,7 @@ from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 
 import plotly
-import robobox_report_generation.IHM as IHM
-
-import robobox_report_generation.IHM
+import report_generation.IHM as IHM
 
 #=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#
 #					This script handles all the data graph function

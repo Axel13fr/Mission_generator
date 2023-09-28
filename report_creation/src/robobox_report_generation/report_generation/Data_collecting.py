@@ -7,8 +7,8 @@ from datetime import timedelta
 import numpy as np
 import logging, coloredlogs
 
-import robobox_report_generation.Display as Disp  # local import
-import robobox_report_generation.IHM as IHM
+import report_generation.Display as Disp  # local import
+import report_generation.IHM as IHM
 
 
 # =#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#

@@ -4,3 +4,15 @@ Store_data/
 report_creation/
 __pycache__/
  *.pyc
+.conda/
+report_creation/.conda
+.vscode/
+.config/
+.cache/
+.dotnet/
+.local/
+.pki/
+WILL_BE_MOUNTED_FROM_OUTSIDE
+.profile
+.bash*
+workspace/

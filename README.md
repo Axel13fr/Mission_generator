@@ -6,7 +6,7 @@ Développement d'un outil de génération de rapports de mission basée sur l'an
 - ROS Noetic (python3)
 - Packages python à installer avec pip:
     - Partie extraction: pandas, pyproj
-    - Partie Display: padas, airium, plotly 
+    - Partie Display: padas, airium, plotly
 
 ### Description du dépôt
 
@@ -39,3 +39,8 @@ Pour lancer le code **Data_collectiong.py**, il faut rentrer les paramètres dat
 ```
 python3 Data_collecting.py
 ```
+
+### Environnement de dev ADE (optionnel)
+
+Build l'image docker vscode pour ade: https://github.com/streetdrone-home/ade-vscode
+Build l'image docker qui contient ROS noetic et conda pour l'environnement python: ``docker build -t noetic-python-dev .``

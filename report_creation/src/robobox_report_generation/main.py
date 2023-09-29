@@ -3,7 +3,7 @@ from datetime import datetime
 import sys
 import coloredlogs
 
-import robobox_report_generation.Data_collecting as Dc
+import report_generation.Data_collecting as Dc
 
 
 # =#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#=#

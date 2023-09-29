@@ -16,3 +16,5 @@ WILL_BE_MOUNTED_FROM_OUTSIDE
 .profile
 .bash*
 workspace/
+/.python_history
+.catkin_tools/

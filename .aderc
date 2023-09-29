@@ -1,0 +1,12 @@
+export ADE_IMAGES="
+noetic-python-dev:latest
+ade-vscode
+"
+export ADE_DOCKER_RUN_ARGS="
+    --add-host=ade-noetic-python:127.0.0.1
+    --net=host
+    --privileged
+    --ipc host
+    -v /dev:/dev
+"
+export ADE_NAME=ade-noetic-python
